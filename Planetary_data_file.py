@@ -1,8 +1,7 @@
 #Planatary data file
 
-G = 6.67408e-11
-
-g=g_meters*10**-9
+G_meters = 6.67408e-11
+G=G_meters*10**-9
 
 sun={
     'name':'Sun',

@@ -4,7 +4,7 @@ from scipy.integrate import ode
 
 import planetary_data_file as pd
 
-class orbit_propagator
+class Orbit_propagator_class
     def __init__(self,self.r0,v0,tspan,dt,cb=pd.earth):
         self.r0=r0
         self.v0=v0

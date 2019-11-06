@@ -3,9 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
 
-from sys import path
-path.append('C:\\Users\\gary-\\OneDrive\\Documents\\GitHub\\GS-ME409')
-from Orbit_propagator_class import Orbit_propagator_class as op
+from orbit_propagator import orbit_propagator as op
 import planetary_data_file as pd
 
 cb=pd.earth
@@ -25,9 +23,9 @@ if __name__ == '__main__': # special variable which defines the code is being wr
 
 
 
-    tspan = 24.0 * 60.0 * 60.0        # timespan of simulation,  we know duration of one orbit in GSO = 24 hours
+    tspan = 24.0 * 3600              # timespan of simulation,  we know duration of one orbit in GSO = 24 hours
     dt = 20.0                         # in order to get our total number of steps (timespam/timestep)
     
-    op=OP(r0,v0,tspan,dt)
+    op=op(r0,v0,tspan,dt)
     op.propagate_orbit()
-    op.plot3d(show_plot=true)
+    op.plot_3d(show_plot=True)
