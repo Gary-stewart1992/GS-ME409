@@ -4,7 +4,7 @@ from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
 
 from orbit_propagator import orbit_propagator as op
-import planetary_data_file as pd
+import Planetary_data_file as pd
 
 cb=pd.earth
 

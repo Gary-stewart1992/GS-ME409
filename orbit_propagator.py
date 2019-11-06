@@ -2,10 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import ode
 
-import planetary_data_file as pd
+import Planetary_data_file as pd
 
-class Orbit_propagator_class
-    def __init__(self,self.r0,v0,tspan,dt,cb=pd.earth):
+class orbit_propagator:
+
+    def __init__(self,r0,v0,tspan,dt,cb=pd.earth):
         self.r0=r0
         self.v0=v0
         self.tspan=tspan
@@ -17,7 +18,7 @@ class Orbit_propagator_class
             self.n_steps = int(np.ceil(self.tspan/self.dt))  # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
 
 
-                                     # initialise arrays
+                                                 # initialise arrays
             self.ys=np.zeros((self.n_steps,6)) # (6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
             self.ts=np.zeros((self.n_steps,1)) # (1 state (time)
 
@@ -33,7 +34,8 @@ class Orbit_propagator_class
             self.solver = ode(self.diffy_q)                   # initiate solver (lsoda)fast, high order
             self.solver.set_integrator('lsoda')               # Adam-Bashford multistep
             self.solver.set_initial_value(self.y0,0)          # initial state
-            solver.set_f_params(earth_mu)                     # define 3rd argument mu
+
+
 
 
 
@@ -60,7 +62,7 @@ class Orbit_propagator_class
         return [vx,vy,vz,ax,ay,az]                      #input = state(position, velocity) so we want to return derivative(velocity,accelleration)
 
 
-    def plot_3d(self,show_plot=falaw,save_plot=false):
+    def plot_3d(self,show_plot=False,save_plot=False):
         
         fig = plt.figure(figsize=(50,50))          # projection - '3d' essential import
         ax = fig.add_subplot(111,projection='3d')  # add subplot 111 - 1st row,1st column 1st value
