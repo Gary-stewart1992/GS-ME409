@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
 
-from orbit_propagator import orbit_propagator as op
 import Planetary_data_file as pd
+import n_plot_tool as npt
+from orbit_propagator import orbit_propagator as op
+
+tspan = 48 * 3600
+dt = 20.0
 
 cb=pd.earth
 
@@ -12,20 +16,21 @@ cb=pd.earth
 if __name__ == '__main__': # special variable which defines the code is being written in main script and not imported
 
                                             # initial conditions of orbit parameters
-    r_mag = cb['radius'] + 35786.0          # magnitutde of orbit distance(km)
+    r_mag = cb['radius'] + 36000         # magnitutde of orbit distance(km)
     v_mag = np.sqrt(cb['mu'] / r_mag)       # magnitude of velocity of a circular orbit follows this equation
-
-
-
-
-    r0 = [r_mag,r_mag*0.1,r_mag*-0.1]        # initial position and velcity vectors                  )
-    v0 = [0,v_mag,v_mag*0.3]                          # velocity will always be perpendicular to position (centrifugal force
-
-
-
-    tspan = 24.0 * 3600              # timespan of simulation,  we know duration of one orbit in GSO = 24 hours
-    dt = 20.0                         # in order to get our total number of steps (timespam/timestep)
+    r0=np.array([r_mag,0,0])                        
+    v0=np.array([0,v_mag,0])
     
-    op=op(r0,v0,tspan,dt)
-    op.propagate_orbit()
-    op.plot_3d(show_plot=True)
+    r_mag = cb['radius'] + 16000
+    v_mag = np.sqrt(cb['mu'] / r_mag)
+    r00 =np.array([r_mag,0,0])                        
+    v00 = np.array([0,v_mag,0.9]) 
+
+    
+    op0=op(r0,v0,tspan,dt)
+    op00=op(r00,v00,tspan,dt)
+    
+    op0.propagate_orbit()
+    op00.propagate_orbit()
+    
+    npt.plot_n_orbits([op0.rs,op00.rs],labels=['LEO','GEO'],show_plot=True)

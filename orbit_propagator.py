@@ -1,18 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import ode
+from mpl_toolkits.mplot3d import Axes3D
+
 
 import Planetary_data_file as pd
+import n_plot_tool as npt
 
 class orbit_propagator:
 
     def __init__(self,r0,v0,tspan,dt,cb=pd.earth):
         self.r0=r0
         self.v0=v0
+        self.y0 = self.r0.tolist() + self.v0.tolist()
         self.tspan=tspan
         self.dt=dt
         self.cb=cb
-
+ 
     def propagate_orbit(self):
 
             self.n_steps = int(np.ceil(self.tspan/self.dt))  # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
@@ -25,9 +29,10 @@ class orbit_propagator:
 
 
                                                         #initial conditions
-            self.y0 = self.r0 + self.v0                 #add lists together to concatenate (not element by element)
-            self.ys[0] = np.array(self.y0)              #initial condition at first step
+                                             #add lists together to concatenate (not element by element)
+            self.ys[0,:] = self.y0              #initial condition at first step
             self.step = 1
+            self.ts[0]=0
 
 
 
