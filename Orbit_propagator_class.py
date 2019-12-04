@@ -1,39 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import ode
-from mpl_toolkits.mplot3d import Axes3D
 
+import planetary_data_file as pd
 
-import Planetary_data_file as pd
-import n_plot_tool as npt
-
-class orbit_propagator:
-
-    def __init__(self,state0,tspan,dt,coes=False,cb=pd.earth):
-        if coes:
-            self.r0,self.v0=npt.coes2rv(state0,deg=True,mu=cb['mu'])
-        else:
-            self.r0=state0[:3]
-            self.v0=state0[3:]
-            
-        self.y0 = self.r0.tolist() + self.v0.tolist()
-
-class Orbit_propagator_class
+class orbit_propagator
     def __init__(self,self.r0,v0,tspan,dt,cb=pd.earth):
         self.r0=r0
         self.v0=v0
         self.tspan=tspan
         self.dt=dt
         self.cb=cb
- 
-        self.n_steps = int(np.ceil(self.tspan/self.dt))  # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
 
-        self.ys=np.zeros((self.n_steps,6)) # (6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
-        self.ts=np.zeros((self.n_steps,1)) # (1 state (time)                               
-        self.ys[0,:] = self.y0              
-        self.step = 1
-        self.ts[0]=0
-        
     def propagate_orbit(self):
 
             self.n_steps = int(np.ceil(self.tspan/self.dt))  # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
@@ -57,39 +35,34 @@ class Orbit_propagator_class
             self.solver.set_initial_value(self.y0,0)          # initial state
             solver.set_f_params(earth_mu)                     # define 3rd argument mu
 
-        self.solver = ode(self.diffy_q)                   # initiate solver (lsoda)fast, high order
-        self.solver.set_integrator('lsoda')               # Adam-Bashford multistep
-        self.solver.set_initial_value(self.y0,0)          # initial state
 
 
-    def propagate_orbit(self):
 
-        while self.solver.successful() and self.step<self.n_steps:     # propogate orbit, solver does its work, timestep to small
-            self.solver.integrate(self.solver.t+self.dt)                             # while its successful the solver can have a number of errors
-            self.ts[self.step] = self.solver.t                                               # i.e time step can be to small or too rigid
-            self.ys[self.step] = self.solver.y                         # step<n_step means that after time steps done we exit while loop
-            self.step += 1
+            while self.solver.successful() and self.step<self.n_steps:     # propogate orbit, solver does its work, timestep to small
+                self.solver.integrate(self.solver.t+self.dt)                             # while its successful the solver can have a number of errors
+                self.ts[self.step] = self.solver.t                                               # i.e time step can be to small or too rigid
+                self.ys[self.step] = self.solver.y                         # step<n_step means that after time steps done we exit while loop
+                self.step += 1
 
 
-        self.rs = self.ys[:,:3]  # extract the position array(60x6) we want all rows and all steps up to upto coloum 0,1,2
-        self.vs = self.ys[:,3:]
+                self.rs = self.ys[:,:3]  # extract the position array(60x6) we want all rows and all steps up to upto coloum 0,1,2
+                self.vs = self.ys[:,3:]
 
 
     def diffy_q(self,t,y,):              # first imput into the differential equation solver
         rx,ry,rz,vx,vy,vz = y         # unpack state: the ode is a function solver and needs time, state and mu
-        r = np.array([rx,ry,rz])
-        v = np.array([vx,vy,vz])       # distance/positional array to be a vector to be used in the law of gravitation
+        r = np.array([rx,ry,rz])      # distance/positional array to be a vector to be used in the law of gravitation
 
 
                                                           # norm of the radius vector because because perbubations require the norm of the input - this lowers computational cost
-        norm_r = np.linalg.norm(r)                                      # linalg is a sub library of numpy for equations and methods
-        ax,ay,az = -r * self.cb['mu']/norm_r**3        # law of gravitation, as r is vector a has output as a vector
+        norm_r = np.linalg.norm(r)                       # linalg is a sub library of numpy for equations and methods
+        ax,ay,az = -r * self.cb['mu'] / norm_r**3        # law of gravitation, as r is vector a has output as a vector
         return [vx,vy,vz,ax,ay,az]                      #input = state(position, velocity) so we want to return derivative(velocity,accelleration)
 
 
     def plot_3d(self,show_plot=falaw,save_plot=false):
         
-        fig = plt.figure(figsize=(16,8))          # projection - '3d' essential import
+        fig = plt.figure(figsize=(50,50))          # projection - '3d' essential import
         ax = fig.add_subplot(111,projection='3d')  # add subplot 111 - 1st row,1st column 1st value
 
 
@@ -109,7 +82,7 @@ class Orbit_propagator_class
                                          # plot the x, y, z vectors
         l=self.cb['radius']*2.0
         x,y,z = [[0,0,0],[0,0,0],[0,0,0]]    # origin of arrow plot
-        u,v,w = [[1,0,0],[0,1,0],[0,0,1]] # finish of arrow plot
+        u,v,w = [[50,0,0],[0,50,0],[0,0,50]] # finish of arrow plot
 
         ax.quiver(x,y,z,u,v,w,color='k')  # quiver is the arrow function with the above arguements and k=colour
         max_val=np.max(np.abs(self.rs))         # this helps normalise the axis and displays equal magnitudes i.e cubic looking

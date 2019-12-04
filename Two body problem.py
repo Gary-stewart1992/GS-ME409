@@ -68,7 +68,7 @@ def plot(r):                                   # create 3D plot
 
 
 earth_radius = 6378.0        # units: km (equatorial)
-earth_mu = 398600.0           # units: km3/s2 (gravitational constant for earth - see newtons law of gravitation)
+earth_mu = 10000.0           # units: km3/s2 (gravitational constant for earth - see newtons law of gravitation)
 
 
 def diffy_q(t,y,mu):              # first imput into the differential equation solver
@@ -78,7 +78,10 @@ def diffy_q(t,y,mu):              # first imput into the differential equation s
 
                                           # norm of the radius vector because because perbubations require the norm of the input - this lowers computational cost
     norm_r = np.linalg.norm(r)            # linalg is a sub library of numpy for equations and methods
-    ax,ay,az = -r * mu / norm_r**3        # law of gravitation, as r is vector a has output as a vector
+    ax,ay,az = -r * mu / norm_r**3
+                                   # law of gravitation, as r is vector a has output as a vector
+    ay = ay + 0.000000015
+    ax = ax + 0.000000015
     return [vx,vy,vz,ax,ay,az]            # input = state(position, velocity) so we want to return derivative(velocity,accelleration)
 
 
@@ -86,7 +89,7 @@ if __name__ == '__main__':                # special variable which defines the c
 
 
                                             # initial conditions of orbit parameters
-    r_mag = earth_radius + 35786.0          # magnitutde of orbit distance(km)
+    r_mag = earth_radius + 10000.0          # magnitutde of orbit distance(km)
     v_mag = np.sqrt(earth_mu / r_mag)       # magnitude of velocity of a circular orbit follows this equation
 
 
@@ -96,8 +99,8 @@ if __name__ == '__main__':                # special variable which defines the c
 
 
 
-    tspan = 64.0 * 60.0 * 60.0        # timespan of simulation,  we know duration of one orbit in GSO = 24 hours
-    dt = 20.0                         # in order to get our total number of steps (timespam/timestep)
+    tspan = 100 * 24 * 60.0 * 60.0        # timespan of simulation,  we know duration of one orbit in GSO = 24 hours
+    dt = 100.0                         # in order to get our total number of steps (timespam/timestep)
     n_steps = int(np.ceil(tspan/dt))  # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
 
 
@@ -118,6 +121,8 @@ if __name__ == '__main__':                # special variable which defines the c
     solver.set_integrator('lsoda')          # Adam-Bashford multistep
     solver.set_initial_value(x0,0)          # initial state
     solver.set_f_params(earth_mu)           # define 3rd argument mu
+
+        
 
 
 
