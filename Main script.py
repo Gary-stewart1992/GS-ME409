@@ -3,12 +3,17 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
 
+<<<<<<< HEAD
 import Planetary_data_file as pd
 import n_plot_tool as npt
 from orbit_propagator import orbit_propagator as op
 
 tspan = 48 * 3600
 dt = 20.0
+=======
+from orbit_propagator import orbit_propagator as op
+import planetary_data_file as pd
+>>>>>>> parent of 7786737... Debugging complete
 
 cb=pd.earth
 

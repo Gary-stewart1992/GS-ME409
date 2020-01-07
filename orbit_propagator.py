@@ -4,6 +4,7 @@ from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
 
 
+<<<<<<< HEAD
 import Planetary_data_file as pd
 import n_plot_tool as npt
 
@@ -18,6 +19,10 @@ class orbit_propagator:
             
         self.y0 = self.r0.tolist() + self.v0.tolist()
 
+=======
+import planetary_data_file as pd
+
+>>>>>>> parent of 7786737... Debugging complete
 class Orbit_propagator_class
     def __init__(self,self.r0,v0,tspan,dt,cb=pd.earth):
         self.r0=r0
@@ -56,11 +61,14 @@ class Orbit_propagator_class
             self.solver.set_integrator('lsoda')               # Adam-Bashford multistep
             self.solver.set_initial_value(self.y0,0)          # initial state
             solver.set_f_params(earth_mu)                     # define 3rd argument mu
+<<<<<<< HEAD
 
         self.solver = ode(self.diffy_q)                   # initiate solver (lsoda)fast, high order
         self.solver.set_integrator('lsoda')               # Adam-Bashford multistep
         self.solver.set_initial_value(self.y0,0)          # initial state
 
+=======
+>>>>>>> parent of 7786737... Debugging complete
 
     def propagate_orbit(self):
 
