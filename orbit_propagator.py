@@ -8,6 +8,11 @@ import tools as t
 
 def null_perts():
     return {
+        'aero':False,
+        'Cd':0,
+        'A':0,
+        'mu':0,
+        'rho':False,
         'J2':False,
         'Aerodrag':False,
         'thrust':False,
@@ -18,6 +23,7 @@ def null_perts():
 class orbit_propagator:
     
     def __init__(self,state0,tspan,dt,coes=False,deg=True,cb=pd.earth,perts=null_perts()):
+        
         if coes:
             self.r0,self.v0,_=t.coes2rv(state0,deg=deg,mu=cb['mu'])
         else:
@@ -33,9 +39,8 @@ class orbit_propagator:
         self.n_steps = int(np.ceil(self.tspan/self.dt)) +1     # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
 
 
-                                                                                         # initialise arrays
+        self.ts=np.zeros((self.n_steps,1))                                                                                 # initialise arrays
         self.ys=np.zeros((self.n_steps,6))                   # (6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
-        self.ts=np.zeros((self.n_steps,1))
         self.ts[0]=0
         self.ys[0,:] = self.y0                    #initial condition at first step
         self.step = 1 
@@ -69,28 +74,121 @@ class orbit_propagator:
         v = np.array([vx,vy,vz])                                                    # distance/positional array to be a vector to be used in the law of gravitation
 
 
-                                                      # norm of the radius vector because because perbubations require the norm of the input - this lowers computational cost
+                                                                              # norm of the radius vector because because perbubations require the norm of the input - this lowers computational cost
         norm_r = np.linalg.norm(r)
-                                                        # linalg is a sub library of numpy for equations and methods
-        a = -r * self.cb['mu'] / norm_r**3        # law of gravitation, as r is vector a has output as a vector
+                                                                              # linalg is a sub library of numpy for equations and methods
+        a = -r * self.cb['mu'] / norm_r**3                                    # law of gravitation, as r is vector a has output as a vector
 
         ##orbit propagator J2 
-
         if self.perts['J2']:
             z2=r[2]**2
             r2=norm_r**2
             tx=r[0]/norm_r*(5*z2/r2-1)
             ty=r[1]/norm_r*(5*z2/r2-1)
             tz=r[2]/norm_r*(5*z2/r2-3)
+            a+=1.5*self.cb['J2']*self.cb['mu']*self.cb['radius']**2.0/norm_r**4.0*np.array([tx,ty,tz])
 
-            a_j2=1.5*self.cb['J2']*self.cb['mu']*self.cb['radius']**2.0/norm_r**4.0*np.array([tx,ty,tz])
+        #aero drag calculations
+        if self.perts['aero']:
 
-            a+=a_j2
+            #calculate altitude and air density
+            z=norm_r-self.cb['radius']
+            rho=t.calc_atmospheric_density(z)
+
+            #calculate motion of s/c wrt rotating frame
+
+            v_rel=v-np.cross(self.cb['atm_rot_vector'],r)
+            
+            drag=-v_rel*0.5*rhp*t.norm(v_rel)*self.perts['Cd']*self.perts['A']/self.mass
+            
+            a+=drag
 
             
 
-        return [vx,vy,vz,a[0],a[1],a[2]]  
-     
+        return [vx,vy,vz,a[0],a[1],a[2]]
+
+
+    def calculate_coes(self,degrees=True):
+        print('Calculating COEs....')
+
+        self.coes=np.zeros((self.n_steps,6))
+
+        for n in range(self.n_steps):
+            self.coes[n,:]=t.rv2coes(self.rs[n,:],self.vs[n,:],mu=self.cb['mu'],degrees=degrees)
+        
+
+    def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change in Classical Orbital Elements',figsize=(16,8)):
+        print('Plotting COEs...')
+
+        fig,axs =plt.subplots(nrows=2,ncols=3,figsize=figsize)
+
+        #figure titles 
+        fig.suptitle(title,fontsize=20)
+
+        #x-axis
+        if hours:
+            ts=self.ts/3600.0
+            xlabel='Time (hours)'
+
+        elif self.days:
+            ts=self.days/3600.0/24.0
+            xlabel='Time Elapsed (days)'
+
+        else:
+            ts=self.ts
+            xlabel='Time Elapsed (seconds)'
+
+
+        fig.tight_layout(pad=6.0)
+        
+        
+        #plotting true anomaly
+        axs[0,0].plot(ts,self.coes[:,3])
+        axs[0,0].set_title('True Anomaly vs. Time')
+        axs[0,0].grid(True)
+        axs[0,0].set_ylabel('True Anomaly (deg)')
+        axs[1,1].set_xlabel(xlabel)
+
+        #plotting semi major axis
+        axs[1,0].plot(ts,self.coes[:,0])
+        axs[1,0].set_title('Semi-Major Axis vs. Time')
+        axs[1,0].grid(True)
+        axs[1,0].set_ylabel('Semi-Major Axis (km)')
+        axs[1,0].set_xlabel(xlabel)
+
+        #plotting eccentricity
+        axs[0,1].plot(ts,self.coes[:,1])
+        axs[0,1].set_title('Eccentricity vs. Time')
+        axs[0,1].grid(True)
+        axs[0,1].set_xlabel(xlabel)
+
+        #plotting argument of periapse
+        axs[0,2].plot(ts,self.coes[:,4])
+        axs[0,2].set_title('Argument of Perigee vs. Time')
+        axs[0,2].grid(True)
+        axs[0,2].set_ylabel('Argument of Perigee (deg)')
+        axs[0,2].set_xlabel(xlabel)
+        
+        #plotting inclination
+        axs[1,1].plot(ts,self.coes[:,2])
+        axs[1,1].set_title('Inclination vs. Time')
+        axs[1,1].grid(True)
+        axs[1,1].set_ylabel('Inclination (deg)')
+        axs[1,1].set_xlabel(xlabel)
+
+         #plotting raan
+        axs[1,2].plot(ts,self.coes[:,5])
+        axs[1,2].set_title('RAAN vs. Time')
+        axs[1,2].grid(True)
+        axs[1,2].set_ylabel('RAAN (deg)')
+        axs[1,2].set_xlabel(xlabel)
+
+        if show_plot:
+            plt.show()
+
+        if save_plot:
+            plt.savefig(title+'.png',dpi=300)
+
 
     def plot_3d(self,show_plot=False,save_plot=False):
         
@@ -129,7 +227,7 @@ class orbit_propagator:
         ax.set_ylabel('Y (km)')
         ax.set_zlabel('Z (km)')
 
-        ax.set_title('Satellite orbit in GSO') # title
+        ax.set_title('Electric Propulsion Manoeuver Trajectory') # title
 
         if show_plot:
             plt.show()

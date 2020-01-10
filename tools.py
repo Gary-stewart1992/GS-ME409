@@ -1,12 +1,16 @@
+import math as m
+import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import math as m
-import datetime
 
 import Planetary_data_file as pd
 
 d2r = np.pi/180.0
+r2d = 180.0/np.pi
+
+def norm(v):
+    return np.linalg.norm(v)
 
 def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title='Multiple Orbits'):
                     
@@ -53,7 +57,7 @@ def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title=
     if save_plot:
         plt.savefig(title+'.png',dpi=300)
 
-
+#COES2RV algorithm at Rene-Schwarz m003
 def coes2rv(coes,deg=False,mu=pd.earth['mu']):
     if deg:
         a,e,i,ta,aop,raan,date=coes
@@ -61,6 +65,7 @@ def coes2rv(coes,deg=False,mu=pd.earth['mu']):
         ta*=d2r
         aop*=d2r
         raan*=d2r
+        
     else:
         a,e,i,ta,aop,raan,date = coes
 
@@ -80,6 +85,57 @@ def coes2rv(coes,deg=False,mu=pd.earth['mu']):
     v = np.dot(perif2eci,v_perif)
 
     return r,v,date
+
+#RV2COES Algorithm at Rene-Schwarz m002
+def rv2coes(r,v,mu=pd.earth['mu'],degrees=False,print_results=False):
+
+    #norm of position vector
+    r_norm=norm(r)
+
+    #specific angular momentum vector
+    h=np.cross(r,v)
+    h_norm=norm(h)
+
+    #inclination
+    i=m.acos(h[2]/h_norm)
+
+    #eccentricity vector
+    e=((norm(v)**2-mu/r_norm)*r-np.dot(r,v)*v)/mu
+
+    #eccentricity scalar
+    e_norm=norm(e)
+
+    #node-line
+    N=np.cross([0,0,1],h)
+    N_norm=norm(N)
+
+    #RAAN
+    raan=m.acos(N[0]/N_norm)
+    if N[1]<0: raan=2*np.pi-raan #quad check
+
+    #argument of perigee
+    aop=m.acos(np.dot(N,e)/N_norm/e_norm)
+    if e[2]<0: aop=2*np.pi-aop #another quad check
+
+    #true anomaly
+    ta=m.acos(np.dot(e,r)/e_norm/r_norm)
+    if np.dot(r,v)<0: ta=2*np.pi-ta #another quad check
+
+    #semi-major axis
+    a=r_norm*(1+e_norm*m.cos(ta))/(1-e_norm**2)
+
+    if print_results:
+        print('a',a)
+        print('e',e_norm)
+        print('i',i*r2d)
+        print('RAAN',raan*r2d)
+        print('AOP',aop*r2d)
+        print('TA',ta*r2d)
+
+
+    #convert to degrees if it has been specificed 
+    if degrees: return [a,e_norm,i*r2d,ta*r2d,aop*r2d,raan*r2d]
+    else: return [a,e_norm,i,ta,aop,raan]
 
 def eci2perif(raan,aop,i):
     
@@ -114,7 +170,7 @@ def ecc_anomaly(arr,method,tol=1e-8):
         print('Invalid method for eccentric anomaly')
             
 
-def tle2coes(tle_filename,mu=pd.earth['mu']):
+def tle2coes(tle_filename,mu=pd.earth['mu'],deg=False):
     
     #read the tle text file from celetrak
     with open(tle_filename, 'r') as f:
@@ -195,6 +251,30 @@ def true_anomaly(arr):
 
 def tle2rv(tle_filename):
     return coes2rv(tle2coes(tle_filename))
+
+
+#calculate atmospheric density from the given altitude
+#def calc_atmospheric_density(z):
+ #   rhos,zs=find_rho_z(z)
+  #  if rhos[0]==0: return 0.0
+#
+ #   Hi=-(zs[1]-zs[0])/math.log(rhos[1]/rhos[0])
+#
+ #   return rhos[0.0]*math.exp(-(z-zs[0.0]/Hi)
+#
+#
+#find endpoints of altitude and densitysurrounding input altitude
+#def find_rho_z(z,zs=pd.earth['zs'],rhos=pd.earth['rhos']):
+ #   if not 1.0<z<1000.0:
+  #      return[[0.0,0.0],[0.0,0.0]]
+#
+ #   #find the two points surrounding the gicen input altitude
+  #  for n in range(len(rhos)-1):
+   #     if zs[n]<z<zs[n+1]:
+    #        return [[rhos[n],rhos[n+1]],[zs[n+1]]]
+#
+ #   #if out of range return zeros
+  #      return [[0.0,0.0],[0.0,0.0]]
 
 
 
