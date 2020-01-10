@@ -2,36 +2,49 @@
 import numpy as np
 from math import sqrt
 from mpl_toolkits.mplot3d import Axes3D
-
+import planetary_data_file as pd
 import tools as t
 from orbit_propagator import orbit_propagator as op
-import planetary_data_file as pd
+from orbit_propagator import null_perts
 
 
-tspan = 24.0 * 3600                  
-dt = 20.0
+tspan = 1000 * 3600                  
+dt = 10.0
 
 cb=pd.earth
 
 
 if __name__ == '__main__':                          # special variable which defines the code is being written in main script and not imported
+    
+    perts=null_perts()
+    perts['thrust']=0.327
+    perts['thrust_direction']=-1
+    perts['isp']=4300
+    perts['J2']=True
 
-    c0=[cb['radius']+4000.0,0.0006189,51.6393,0.0,234.1955,105.6372]  #ISS
+    mass0 = 1400 #kg
 
-    c1=[cb['radius']+35800.0,0.0,0.0,0.0,0.0,0.0]                    #GEO
+    #Galileo-022
+    op0=op(t.tle2coes('galileo.txt'),tspan,dt,coes=True,deg=True,perts=perts)
 
-    c2=[cb['radius']+6000.0,0.3,20.0,0.0,15.0,40.0]                  #MEO
-        
-        
-    op0=op(c0,tspan,dt,coes=True)
-    op1=op(c1,tspan,dt,coes=True)
-    op2=op(c2,tspan,dt,coes=True)
+    #SKYNET-4C com sat (1500kg,2.2kW) 
+    #op1=op(t.tle2coes('SKYNET4Ctle.txt'),tspan,dt,coes=True,deg=True,perts=perts)
 
-    op0.propagate_orbit()
-    op1.propagate_orbit()
-    op2.propagate_orbit()
+    #GLONASS 
+    #op2=op(t.tle2coes('GLONASS-M.txt'),tspan,dt,coes=True,deg=True,perts=perts)
 
-    t.plot_n_orbits([op0.rs,op1.rs,op2.rs],labels=['ISS','GSO','MEO'],title=['Multiple Orbits'], show_plot=True)
+    #POLAR
+    #op3=op(t.tle2coes('POLAR.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+
+    #POLAR
+    op4=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+
+    #t.plot_n_orbits([op0.rs,op1.rs,op2.rs,op3.rs,op4.rs],labels=['GALIL022','SKYNET4C','GLONASS-M','POLAR','ISS'],title=['Multiple Orbits'], show_plot=True)
+
+    op4.plot_3d(show_plot=True)
+
+
+
 
 
 

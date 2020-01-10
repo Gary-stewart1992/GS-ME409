@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import math as m 
+import math as m
+import datetime
 
-import planetary_data_file as pd
+import Planetary_data_file as pd
 
 d2r = np.pi/180.0
 
@@ -14,8 +15,8 @@ def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title=
 
     n=0
     for r in rs:     
-        ax.plot(r[:,0],r[:,1],r[:,2], label=labels[n])               # satallite trajectory plot
-        ax.plot([r[0,0]],[r[0,1]],[r[0,2]]) # satellites initial position plot
+        ax.plot(r[:,0],r[:,1],r[:,2],label=labels[n])               # satallite trajectory plot
+        ax.plot([r[0,0]],[r[0,1]],[r[0,2]],'ko')                    # satellites initial position plot
         n+=1
 
                                                              # plot earth
@@ -44,7 +45,7 @@ def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title=
     ax.set_ylabel('Y (km)')
     ax.set_zlabel('Z (km)')
 
-    ax.set_title('Title') # title
+    ax.set_title('Multiple Orbits') # title
     plt.legend()
 
     if show_plot:
@@ -55,13 +56,13 @@ def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title=
 
 def coes2rv(coes,deg=False,mu=pd.earth['mu']):
     if deg:
-        a,e,i,ta,aop,raan=coes
+        a,e,i,ta,aop,raan,date=coes
         i*=d2r
         ta*=d2r
         aop*=d2r
         raan*=d2r
     else:
-        a,e,i,ta,aop,raan = coes
+        a,e,i,ta,aop,raan,date = coes
 
     E=ecc_anomaly([ta,e], 'tae')
 
@@ -78,7 +79,7 @@ def coes2rv(coes,deg=False,mu=pd.earth['mu']):
     r = np.dot(perif2eci,r_perif)
     v = np.dot(perif2eci,v_perif)
 
-    return r,v
+    return r,v,date
 
 def eci2perif(raan,aop,i):
     
@@ -113,6 +114,91 @@ def ecc_anomaly(arr,method,tol=1e-8):
         print('Invalid method for eccentric anomaly')
             
 
+def tle2coes(tle_filename,mu=pd.earth['mu']):
+    
+    #read the tle text file from celetrak
+    with open(tle_filename, 'r') as f:
+        lines=f.readlines()
+
+    #break the text file into three seperate lines
+    line0 = lines[0].strip() #satellite name
+    line1 = lines[1].strip().split
+    line2 = lines[2].strip().split
+
+    #epoch (year and day)
+    epoch=line1()[3]
+    year,month,day,hour=calc_epoch(epoch)
+
+    #gather COE's from .txt
+
+    #inclination
+    i=float(line2()[2])*d2r #in radians
+
+    #RAAN
+    raan=float(line2()[3])*d2r #in radians
+
+    #eccentricity
+    e_string=line2()[4]
+    e=float('0.'+e_string)
+
+    #arguement of perigee
+    aop=float(line2()[5])*d2r #in radians
+
+    #mean_anomaly
+    Me=float(line2()[6])*d2r #in radians
+
+    #mean motion
+    mean_motion=float(line2()[7]) #in revolutions per day
+
+    #period
+    T=1/mean_motion*24*3600 #in units of seconds
+
+    #semi-major axis
+    a=(T**2*mu/4.0/np.pi**2)**(1/3.0)
+
+    #calculate eccentric anomaly
+    E=ecc_anomaly([Me,e],'newton')
+
+    #calculate true anomally
+    ta=true_anomaly([E,e])
+
+    #magnitude of radius vector
+    r_mag=a*(1-e*np.cos(E))    #####potential issue
+
+    return a,e,i,ta,aop,raan,[year,month,day,hour]
+
+def calc_epoch(epoch):
+
+    #epoch year
+    year=int('20'+epoch[:2])
+
+    epoch=epoch[2:].split('.')
+
+    #day of year
+    day_of_year=int(epoch[0])-1
+
+    #decimal hour of day
+    hour=float('0.'+epoch[1])*24
+
+    #year/month/day
+    date=datetime.date(year,1,1)+datetime.timedelta(day_of_year)
+
+    #extract month and day from tle
+    month=float(date.month)
+    day=float(date.day)
+
+    return year,month,day,hour
+
+def true_anomaly(arr):
+    E,e=arr
+    return 2*np.arctan(np.sqrt((1+e)/(1-e))*np.tan(E/2.0))
+
+def tle2rv(tle_filename):
+    return coes2rv(tle2coes(tle_filename))
+
+
+
+    
     
     
 

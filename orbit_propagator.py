@@ -3,16 +3,23 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
 
-import planetary_data_file as pd
+import Planetary_data_file as pd
 import tools as t
 
-
+def null_perts():
+    return {
+        'J2':False,
+        'Aerodrag':False,
+        'thrust':False,
+        'thrust_direction':False,
+        'isp':0
+    }
 
 class orbit_propagator:
     
-    def __init__(self,state0,tspan,dt,coes=False, cb=pd.earth):
+    def __init__(self,state0,tspan,dt,coes=False,deg=True,cb=pd.earth,perts=null_perts()):
         if coes:
-            self.r0,self.v0 = t.coes2rv(state0,deg=True,mu=cb['mu'])
+            self.r0,self.v0,_=t.coes2rv(state0,deg=deg,mu=cb['mu'])
         else:
             self.r0 = state0[:3]
             self.v0 = state0[3:]
@@ -23,15 +30,15 @@ class orbit_propagator:
         self.dt=dt
         self.cb=cb
 
-        self.n_steps = int(np.ceil(self.tspan/self.dt))     # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
+        self.n_steps = int(np.ceil(self.tspan/self.dt)) +1     # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
 
 
                                                                                          # initialise arrays
         self.ys=np.zeros((self.n_steps,6))                   # (6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
         self.ts=np.zeros((self.n_steps,1))
         self.ts[0]=0
-        self.ys[0,:] = self.y0                       #initial condition at first step
-        self.step = 1
+        self.ys[0,:] = self.y0                    #initial condition at first step
+        self.step = 1 
 
 
 
@@ -39,9 +46,11 @@ class orbit_propagator:
         self.solver.set_integrator('lsoda')               # Adam-Bashford multistep
         self.solver.set_initial_value(self.y0,0)          # initial state
 
+        self.perts=perts
+        
+        self.propagate_orbit()
+
     def propagate_orbit(self):
-
-
 
             while self.solver.successful() and self.step<self.n_steps:                   # propogate orbit, solver does its work, timestep to small
                 self.solver.integrate(self.solver.t+self.dt)                             # while its successful the solver can have a number of errors
@@ -63,10 +72,25 @@ class orbit_propagator:
                                                       # norm of the radius vector because because perbubations require the norm of the input - this lowers computational cost
         norm_r = np.linalg.norm(r)
                                                         # linalg is a sub library of numpy for equations and methods
-        ax,ay,az = -r * self.cb['mu'] / norm_r**3        # law of gravitation, as r is vector a has output as a vector
+        a = -r * self.cb['mu'] / norm_r**3        # law of gravitation, as r is vector a has output as a vector
 
-        return [vx,vy,vz,ax,ay,az]                      #input = state(position, velocity) so we want to return derivative(velocity,accelleration)
+        ##orbit propagator J2 
 
+        if self.perts['J2']:
+            z2=r[2]**2
+            r2=norm_r**2
+            tx=r[0]/norm_r*(5*z2/r2-1)
+            ty=r[1]/norm_r*(5*z2/r2-1)
+            tz=r[2]/norm_r*(5*z2/r2-3)
+
+            a_j2=1.5*self.cb['J2']*self.cb['mu']*self.cb['radius']**2.0/norm_r**4.0*np.array([tx,ty,tz])
+
+            a+=a_j2
+
+            
+
+        return [vx,vy,vz,a[0],a[1],a[2]]  
+     
 
     def plot_3d(self,show_plot=False,save_plot=False):
         
@@ -76,7 +100,7 @@ class orbit_propagator:
 
                                                                         # plor trajectory and starting point
         ax.plot(self.rs[:,0],self.rs[:,1],self.rs[:,2],'k', label='Trajectory')               # satallite trajectory plot
-        ax.plot([self.rs[0,0]],[self.rs[0,1]],[self.rs[0,2]],'wo', label ='Initial Position') # satellites initial position plot
+        ax.plot([self.rs[0,0]],[self.rs[0,1]],[self.rs[0,2]],'ko', label ='Initial Position') # satellites initial position plot
 
 
                                                  # plot earth
