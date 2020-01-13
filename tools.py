@@ -15,15 +15,15 @@ def norm(v):
 def normed(v):
     return np.array(v)/norm(v)
 
-def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title='Multiple Orbits'):
+def plot_n_orbits(rs,labelcb=pd.earth, show_plot=False,save_plot=False, title='Multiple Orbits',dpi=500):
                     
     fig = plt.figure(figsize=(16,8))          # projection - '3d' essential import
     ax = fig.add_subplot(111,projection='3d')  # add subplot 111 - 1st row,1st column 1st value
 
     n=0
     for r in rs:     
-        ax.plot(r[:,0],r[:,1],r[:,2],label=labels[n])               # satallite trajectory plot
-        ax.plot([r[0,0]],[r[0,1]],[r[0,2]],'ko')                    # satellites initial position plot
+        ax.plot(r[:,0],r[:,1],r[:,2],label='Trajectory')               # satallite trajectory plot
+        ax.plot([r[0,0]],[r[0,1]],[r[0,2]], 'ko')                    # satellites initial position plot
         n+=1
 
                                                              # plot earth
@@ -37,7 +37,7 @@ def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title=
                                                      # plot the x, y, z vectors
     l=cb['radius']*2.0
     x,y,z = [[0,0,0],[0,0,0],[0,0,0]]    # origin of arrow plot
-    u,v,w = [[50,0,0],[0,50,0],[0,0,50]] # finish of arrow plot
+    u,v,w = [[500,0,0],[0,500,0],[0,0,500], 'ko'] # finish of arrow plot
 
     ax.quiver(x,y,z,u,v,w,color='k')                            # quiver is the arrow function with the above arguements and k=colour
     max_val=np.max(np.abs(rs))          # this helps normalise the axis and displays equal magnitudes i.e cubic looking
@@ -52,7 +52,7 @@ def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title=
     ax.set_ylabel('Y (km)')
     ax.set_zlabel('Z (km)')
 
-    ax.set_title('Multiple Orbits') # title
+    ax.set_title('Deorbiting Manoeuvre') # title
     plt.legend()
 
     if show_plot:
@@ -89,15 +89,11 @@ def coes2rv(coes,deg=False,mu=pd.earth['mu']):
     r = np.dot(perif2eci,r_perif)
     v = np.dot(perif2eci,v_perif)
 
-    print('r', r)
-
-    print('v',v)
-
     return r,v,date
 
 #RV2COES Algorithm at Rene-Schwarz m002
 def rv2coes(r,v,mu=pd.earth['mu'],degrees=False,print_results=False):
-
+    
     #norm of position vector
     r_norm=norm(r)
 

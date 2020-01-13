@@ -77,8 +77,8 @@ class orbit_propagator:
 
         self.ts=self.ts[:self.step]
         self.rs = self.y[:self.step,:3]                                                      # extract the position array(60x6) we want all rows and all steps up to upto coloum 0,1,2
-        self.vs = self.y[:self.step,3:]
-        #self.masses=self.y[:self.step,-1]
+        self.vs = self.y[:self.step,3:6]
+        self.masses=self.y[:self.step,-1]
         self.alts=(np.linalg.norm(self.rs,axis=1)-self.cb['radius']).reshape((self.step,1))
 
 
@@ -134,10 +134,10 @@ class orbit_propagator:
     def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change in Orbital Elements',figsize=(16,8)):
         print('Plotting COEs...')
 
-        fig,axs =plt.subplots(nrows=2,ncols=3,figsize=figsize)
+        fig1,axs1 =plt.subplots(nrows=2,ncols=3,figsize=figsize)
 
         #figure titles 
-        fig.suptitle(title,fontsize=20)
+        fig1.suptitle(title,fontsize=20)
 
         #x-axis
         if hours:
@@ -153,55 +153,55 @@ class orbit_propagator:
             xlabel='Time Elapsed (seconds)'
 
 
-        fig.tight_layout(pad=6.0)
+        fig1.tight_layout(pad=6.0)
         
         
         #plotting true anomaly
-        axs[0,0].plot(ts,self.coes[:,3])
-        axs[0,0].set_title('True Anomaly vs. Time')
-        axs[0,0].grid(True)
-        axs[0,0].set_ylabel('True Anomaly (deg)')
-        axs[1,1].set_xlabel(xlabel)
+        axs1[0,0].plot(ts,self.coes[:,3])
+        axs1[0,0].set_title('True Anomaly vs. Time')
+        axs1[0,0].grid(True)
+        axs1[0,0].set_ylabel('True Anomaly (deg)')
+        axs1[1,1].set_xlabel(xlabel)
 
         #plotting semi major axis
-        axs[1,0].plot(ts,self.coes[:,0])
-        axs[1,0].set_title('Semi-Major Axis vs. Time')
-        axs[1,0].grid(True)
-        axs[1,0].set_ylabel('Semi-Major Axis (km)')
-        axs[1,0].set_xlabel(xlabel)
+        axs1[1,0].plot(ts,self.coes[:,0])
+        axs1[1,0].set_title('Semi-Major Axis vs. Time')
+        axs1[1,0].grid(True)
+        axs1[1,0].set_ylabel('Semi-Major Axis (km)')
+        axs1[1,0].set_xlabel(xlabel)
 
         #plotting eccentricity
-        axs[0,1].plot(ts,self.coes[:,1])
-        axs[0,1].set_title('Eccentricity vs. Time')
-        axs[0,1].grid(True)
-        axs[0,1].set_xlabel(xlabel)
+        axs1[0,1].plot(ts,self.coes[:,1])
+        axs1[0,1].set_title('Eccentricity vs. Time')
+        axs1[0,1].grid(True)
+        axs1[0,1].set_xlabel(xlabel)
 
         #plotting argument of periapse
-        axs[0,2].plot(ts,self.coes[:,4])
-        axs[0,2].set_title('Argument of Perigee vs. Time')
-        axs[0,2].grid(True)
-        axs[0,2].set_ylabel('Argument of Perigee (deg)')
-        axs[0,2].set_xlabel(xlabel)
+        axs1[0,2].plot(ts,self.coes[:,4])
+        axs1[0,2].set_title('Argument of Perigee vs. Time')
+        axs1[0,2].grid(True)
+        axs1[0,2].set_ylabel('Argument of Perigee (deg)')
+        axs1[0,2].set_xlabel(xlabel)
         
         #plotting inclination
-        axs[1,1].plot(ts,self.coes[:,2])
-        axs[1,1].set_title('Inclination vs. Time')
-        axs[1,1].grid(True)
-        axs[1,1].set_ylabel('Inclination (deg)')
-        axs[1,1].set_xlabel(xlabel)
+        axs1[1,1].plot(ts,self.coes[:,2])
+        axs1[1,1].set_title('Inclination vs. Time')
+        axs1[1,1].grid(True)
+        axs1[1,1].set_ylabel('Inclination (deg)')
+        axs1[1,1].set_xlabel(xlabel)
 
          #plotting raan
-        axs[1,2].plot(ts,self.coes[:,5])
-        axs[1,2].set_title('RAAN vs. Time')
-        axs[1,2].grid(True)
-        axs[1,2].set_ylabel('RAAN (deg)')
-        axs[1,2].set_xlabel(xlabel)
+        axs1[1,2].plot(ts,self.coes[:,5])
+        axs1[1,2].set_title('RAAN vs. Time')
+        axs1[1,2].grid(True)
+        axs1[1,2].set_ylabel('RAAN (deg)')
+        axs1[1,2].set_xlabel(xlabel)
 
         if show_plot:
             plt.show()
 
         if save_plot:
-            plt.savefig(title+'.png',dpi=300)
+            plt.savefig(title+'.png',dpi=500)
 
 
     def plot_alts(self,show_plot=False,save_plot=False,hours=False,days=False,title='Radial Distance vs. Time',figsize=(16,8),dpi=500):
@@ -235,13 +235,13 @@ class orbit_propagator:
 
     def plot_3d(self,show_plot=False,save_plot=False, title='Deorbiting Manoeuvre Trajectory',dpi=500):
         
-        fig = plt.figure(figsize=(16,8))          # projection - '3d' essential import
-        ax = fig.add_subplot(111,projection='3d')  # add subplot 111 - 1st row,1st column 1st value
+        fig0 = plt.figure(figsize=(16,8))          # projection - '3d' essential import
+        ax0 = fig0.add_subplot(111,projection='3d')  # add subplot 111 - 1st row,1st column 1st value
 
 
                                                                         # plor trajectory and starting point
-        ax.plot(self.rs[:,0],self.rs[:,1],self.rs[:,2],'k', label='Trajectory')               # satallite trajectory plot
-        ax.plot([self.rs[0,0]],[self.rs[0,1]],[self.rs[0,2]],'ko', label ='Initial Position') # satellites initial position plot
+        ax0.plot(self.rs[:,0],self.rs[:,1],self.rs[:,2],'k', label='Trajectory')               # satallite trajectory plot
+        ax0.plot([self.rs[0,0]],[self.rs[0,1]],[self.rs[0,2]],'ko', label ='Initial Position') # satellites initial position plot
 
 
                                                  # plot earth
@@ -249,7 +249,7 @@ class orbit_propagator:
         _x = self.cb['radius'] * np.cos(_u) * np.sin(_v)        # trig
         _y = self.cb['radius'] * np.sin(_u) * np.sin(_v)        # trig
         _z = self.cb['radius'] * np.cos(_v)                     # trig
-        ax.plot_surface(_x,_y,_z, cmap='Blues')      # surface plot (x,y,z variables cmap=colour plot)
+        ax0.plot_surface(_x,_y,_z, cmap='Blues')      # surface plot (x,y,z variables cmap=colour plot)
 
 
                                          # plot the x, y, z vectors
@@ -257,26 +257,29 @@ class orbit_propagator:
         x,y,z = [[0,0,0],[0,0,0],[0,0,0]]    # origin of arrow plot
         u,v,w = [[50,0,0],[0,50,0],[0,0,50]] # finish of arrow plot
 
-        ax.quiver(x,y,z,u,v,w,color='k')  # quiver is the arrow function with the above arguements and k=colour
+        ax0.quiver(x,y,z,u,v,w,color='k')  # quiver is the arrow function with the above arguements and k=colour
         max_val=np.max(np.abs(self.rs))         # this helps normalise the axis and displays equal magnitudes i.e cubic looking
 
 
+
                                       # set labels and titles
-        ax.set_xlim([-max_val,max_val])
-        ax.set_ylim([-max_val,max_val])
-        ax.set_zlim([-max_val,max_val])
+        ax0.set_xlim([-max_val,max_val])
+        ax0.set_ylim([-max_val,max_val])
+        ax0.set_zlim([-max_val,max_val])
 
-        ax.set_xlabel('X (km)')
-        ax.set_ylabel('Y (km)')
-        ax.set_zlabel('Z (km)')
+        ax0.set_xlabel('X (km)')
+        ax0.set_ylabel('Y (km)')
+        ax0.set_zlabel('Z (km)')
 
-        ax.set_title('Electric Propulsion Manoeuvre Trajectory') # title
+        ax0.set_title('Electric Propulsion Manoeuvre Trajectory') # title
 
         if show_plot:
             plt.show()
         if save_plot:
             plt.savefig(title+'.png',dpi=300)
 
+
+  
 
 
 
