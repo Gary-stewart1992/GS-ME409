@@ -58,10 +58,11 @@ def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title=
     if show_plot:
         plt.show()
     if save_plot:
-        plt.savefig(title+'.png',dpi=300)
+        plt.savefig(title+'.png',dpi=500)
 
 #COES2RV algorithm at Rene-Schwarz m003
 def coes2rv(coes,deg=False,mu=pd.earth['mu']):
+
     if deg:
         a,e,i,ta,aop,raan,date=coes
         i*=d2r
@@ -71,6 +72,8 @@ def coes2rv(coes,deg=False,mu=pd.earth['mu']):
         
     else:
         a,e,i,ta,aop,raan,date = coes
+
+    print('date',date)
 
     E=ecc_anomaly([ta,e], 'tae')
 
@@ -173,7 +176,7 @@ def ecc_anomaly(arr,method,tol=1e-8):
         print('Invalid method for eccentric anomaly')
             
 
-def tle2coes(tle_filename,mu=pd.earth['mu'],deg=False):
+def tle2coes(tle_filename,mu=pd.earth['mu'],deg=False): #should be false
     
     #read the tle text file from celetrak
     with open(tle_filename, 'r') as f:
@@ -258,26 +261,26 @@ def tle2rv(tle_filename):
 
 #calculate atmospheric density from the given altitude
 #def calc_atmospheric_density(z):
- #   rhos,zs=find_rho_z(z)
-  #  if rhos[0]==0: return 0.0
+#    rhos,zs=find_rho_z(z)
+#    if rhos[0]==0: return 0.0
 #
- #   Hi=-(zs[1]-zs[0])/math.log(rhos[1]/rhos[0])
+#    Hi=-(zs[1]-zs[0])/math.log(rhos[1]/rhos[0])
 #
- #   return rhos[0.0]*math.exp(-(z-zs[0.0]/Hi)
+#    return rhos[0.0]*math.exp(-(z-zs[0.0]/Hi)
 #
 #
 #find endpoints of altitude and densitysurrounding input altitude
 #def find_rho_z(z,zs=pd.earth['zs'],rhos=pd.earth['rhos']):
- #   if not 1.0<z<1000.0:
-  #      return[[0.0,0.0],[0.0,0.0]]
+#    if not 1.0<z<1000.0:
+#        return[[0.0,0.0],[0.0,0.0]]
 #
- #   #find the two points surrounding the gicen input altitude
-  #  for n in range(len(rhos)-1):
-   #     if zs[n]<z<zs[n+1]:
-    #        return [[rhos[n],rhos[n+1]],[zs[n+1]]]
+#    #find the two points surrounding the gicen input altitude
+#    for n in range(len(rhos)-1):
+#        if zs[n]<z<zs[n+1]:
+#            return [[rhos[n],rhos[n+1]],[zs[n+1]]]
 #
- #   #if out of range return zeros
-  #      return [[0.0,0.0],[0.0,0.0]]
+#    #if out of range return zeros
+#    return [[0.0,0.0],[0.0,0.0]]
 
 
 

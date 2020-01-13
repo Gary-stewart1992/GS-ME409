@@ -9,12 +9,10 @@ from orbit_propagator import orbit_propagator as op
 from orbit_propagator import null_perts
 
 
-tspan = 48* 3600                   
-dt = 100.0
+tspan = 48*3600                   
+dt = 10.0
 
 cb=pd.earth
-
-mass0 = 150.0
 
 
 if __name__ == '__main__':                          # special variable which defines the code is being written in main script and not imported
@@ -28,28 +26,17 @@ if __name__ == '__main__':                          # special variable which def
     perts['isp']=4300
     perts['J2']=True
 
-    mass0=100.0
+
+
+    mass0 = 150.0 #kg
+
+    state0=[cb['radius']+1000.0,0.1,10.0,0.0,0.0,0.0]
  
-
-    #Galileo-022
-    #op0=op(t.tle2coes('galileo.txt'),tspan,dt,coes=True,deg=True,perts=perts)
-
-    #SKYNET-4C com sat (1500kg,2.2kW) 
-    #op1=op(t.tle2coes('SKYNET4Ctle.txt'),tspan,dt,coes=True,deg=True,perts=perts)
-
-    #GLONASS 
-    #op2=op(t.tle2coes('GLONASS-M.txt'),tspan,dt,coes=True,deg=True,perts=perts)
-
-    #POLAR
-    #op3=op(t.tle2coes('POLAR.txt'),tspan,dt,coes=True,deg=True,perts=perts)
-
-    #ISS
-    #op=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,mass0=mass0,perts=perts)
-
-    state0=t.tle2coes('ISS.txt',deg=True)
-
     op=op(state0,tspan,dt,deg=True,coes=True,mass0=mass0,perts=perts)
-    op.plot_3d(show_plot=True)
+    
+    
+    op.plot_alts(show_plot=True,hours=True)
+    op.plot_3d(show_plot=True)             
     op.calculate_coes()
     op.plot_coes(show_plot=True,hours=True)
      
@@ -81,6 +68,22 @@ if __name__ == '__main__':                          # special variable which def
     #op4.plot_3d(show_plot=True)
     #op4.calculate_coes()
     #op4.plot_coes(show_plot=True,hours=True)
+
+
+  #Galileo-022
+    #op0=op(t.tle2coes('galileo.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+
+    #SKYNET-4C com sat (1500kg,2.2kW) 
+    #op1=op(t.tle2coes('SKYNET4Ctle.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+
+    #GLONASS 
+    #op2=op(t.tle2coes('GLONASS-M.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+
+    #POLAR
+    #op3=op(t.tle2coes('POLAR.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+
+    #ISS
+    #op=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,mass0=mass0,perts=perts)
 
 
 

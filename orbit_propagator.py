@@ -36,17 +36,17 @@ class orbit_propagator:
         self.dt=dt
         self.mass0=mass0                                                
         self.tspan=tspan
-         
-    
 
-        self.n_steps = int(np.ceil(self.tspan/self.dt))+ 1     # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
+ 
+    
+        self.n_steps = int(np.ceil(self.tspan/self.dt))+1                                                   # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
         self.ts=np.zeros((self.n_steps,1))                                                                                 # initialise arrays
         self.y=np.zeros((self.n_steps,7))
-        self.propagator=propagator#                             (6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
+        self.propagator=propagator                                                                      #6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
         self.step = 1
         
 
-        self.y[0,:] = self.r0.tolist() + self.v0.tolist() + [self.mass0]                   #initial condition at first step
+        self.y[0,:] = self.r0.tolist() + self.v0.tolist()+[self.mass0]                    #initial condition at first step
 
         self.solver = ode(self.diffy_q)                                                  # initiate solver (lsoda)fast, high order
         self.solver.set_integrator(self.propagator)                                     # Adam-Bashford multistep
@@ -77,8 +77,8 @@ class orbit_propagator:
     def diffy_q(self,t,y,):                                                           # first imput into the differential equation solver
         rx,ry,rz,vx,vy,vz,mass= y                                                             # unpack state: the ode is a function solver and needs time, state and mu
         r = np.array([rx,ry,rz])
-        v = np.array([vx,vy,vz])                                                    # distance/positional array to be a vector to be used in the law of gravitation
-
+        v = np.array([vx,vy,vz])# distance/positional array to be a vector to be used in the law of gravitation
+        
 
                                                                               # norm of the radius vector because because perbubations require the norm of the input - this lowers computational cost
         norm_r = np.linalg.norm(r)
@@ -94,28 +94,22 @@ class orbit_propagator:
             tz=r[2]/norm_r*(5*z2/r2-3)
             a+=1.5*self.cb['J2']*self.cb['mu']*self.cb['radius']**2.0/norm_r**4.0*np.array([tx,ty,tz])
 
-        #aero drag calculations
-        if self.perts['aero']:
 
-            #calculate altitude and air density
-            z=norm_r-self.cb['radius']
-            rho=t.calc_atmospheric_density(z)
-
-            #calculate motion of s/c wrt rotating frame
-
-            v_rel=v-np.cross(self.cb['atm_rot_vector'],r)
-            
-            drag=-v_rel*0.5*rhp*t.norm(v_rel)*self.perts['Cd']*self.perts['A']/self.mass
-            
-            a+=drag
+#        #aero drag calculations
+#        if self.perts['aero']:
+#            z=norm_r-self.cb['radius']
+#            rho=t.calc_atmospheric_density(z)
+#
+#
+#            v_rel=v-np.cross(self.cb['atm_rot_vector'],r)
+#            drag=-v_rel*0.5*rhp*t.norm(v_rel)*self.perts['Cd']*self.perts['A']/self.mass
+#            a+=drag
 
         if self.perts['thrust']:
-
             a+self.perts['thrust_direction']*t.normed(v)*self.perts['thrust']/mass/1000.0
-
             dmdt=-self.perts['thrust']/self.perts['isp']/9.81   
 
-        return [vx,vy,vz,a[0],a[1],a[2],dmdt]
+        return [vx,vy,vz,a[0],a[1],a[2]]
 
 
     def calculate_coes(self,degrees=True):
@@ -125,7 +119,8 @@ class orbit_propagator:
 
         for n in range(self.n_steps):
             self.coes[n,:]=t.rv2coes(self.rs[n,:],self.vs[n,:],mu=self.cb['mu'],degrees=degrees)
-        
+
+
 
     def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change in Classical Orbital Elements',figsize=(16,8)):
         print('Plotting COEs...')
@@ -200,7 +195,36 @@ class orbit_propagator:
             plt.savefig(title+'.png',dpi=300)
 
 
-    def plot_3d(self,show_plot=False,save_plot=False):
+    def plot_alts(self,show_plot=False,save_plot=False,hours=False,days=False,title='Radial Distance vs. Time',figsize=(16,8),dpi=500):
+
+        if hours:
+            ts=self.ts/3600.0
+            xunit='Time (hours)'
+
+        elif self.days:
+            ts=self.days/(3600.0/24.0)
+            xunit='Time Elapsed (days)'
+
+        else:
+            ts=self.ts
+            xunit='Time Elapsed (seconds)'
+
+        plt.figyure(figsize=figsize)
+        plt.plot(ts,self.alts, 'k')
+        plt.grid(True)
+        plt.xlabel('Time (%s)' % x_units)
+        plt.ylabel('altitude (km)')
+        plt.title(title)
+        if show_plot:
+            plt.show()
+        if save_plot:
+            plt.savefig(title+'.png',dpi=dpi)
+
+            
+    
+
+
+    def plot_3d(self,show_plot=False,save_plot=False, title='Deorbiting Manoeuvre Trajectory',dpi=500):
         
         fig = plt.figure(figsize=(16,8))          # projection - '3d' essential import
         ax = fig.add_subplot(111,projection='3d')  # add subplot 111 - 1st row,1st column 1st value
@@ -237,12 +261,15 @@ class orbit_propagator:
         ax.set_ylabel('Y (km)')
         ax.set_zlabel('Z (km)')
 
-        ax.set_title('Electric Propulsion Manoeuver Trajectory') # title
+        ax.set_title('Electric Propulsion Manoeuvre Trajectory') # title
 
         if show_plot:
             plt.show()
         if save_plot:
             plt.savefig(title+'.png',dpi=300)
+
+
+
 
 
 
