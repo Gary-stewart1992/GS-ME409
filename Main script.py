@@ -14,6 +14,8 @@ dt = 100.0
 
 cb=pd.earth
 
+mass0 = 150.0
+
 
 if __name__ == '__main__':                          # special variable which defines the code is being written in main script and not imported
     
@@ -25,39 +27,31 @@ if __name__ == '__main__':                          # special variable which def
     perts['thrust_direction']=-1
     perts['isp']=4300
     perts['J2']=True
+
+    mass0=100.0
  
-    Mass0= 150.0
-
-
-  
-   
 
     #Galileo-022
-    op0=op(t.tle2coes('galileo.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+    #op0=op(t.tle2coes('galileo.txt'),tspan,dt,coes=True,deg=True,perts=perts)
 
     #SKYNET-4C com sat (1500kg,2.2kW) 
-    op1=op(t.tle2coes('SKYNET4Ctle.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+    #op1=op(t.tle2coes('SKYNET4Ctle.txt'),tspan,dt,coes=True,deg=True,perts=perts)
 
     #GLONASS 
-    op2=op(t.tle2coes('GLONASS-M.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+    #op2=op(t.tle2coes('GLONASS-M.txt'),tspan,dt,coes=True,deg=True,perts=perts)
 
     #POLAR
-    op3=op(t.tle2coes('POLAR.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+    #op3=op(t.tle2coes('POLAR.txt'),tspan,dt,coes=True,deg=True,perts=perts)
 
     #ISS
-    op4=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,perts=perts)
+    #op=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,mass0=mass0,perts=perts)
 
     state0=t.tle2coes('ISS.txt',deg=True)
-    
 
-
-
-    #book example propagate
-    op=op(state0,tspan,dt,perts=perts,deg=True,coes=True)
+    op=op(state0,tspan,dt,deg=True,coes=True,mass0=mass0,perts=perts)
     op.plot_3d(show_plot=True)
     op.calculate_coes()
     op.plot_coes(show_plot=True,hours=True)
-
      
 
 
@@ -80,7 +74,7 @@ if __name__ == '__main__':                          # special variable which def
     #r0=np.array([-2384.46,5729.01,3050.45])
     #v0=np.array([-7.36138,-2.98997,1.64352])
     #state0=np.array(t.rv2coes(r0,v0,print_results=True))
-    #t.plot_n_orbits([op0.rs,op1.rs,op2.rs,op3.rs,op4.rs],labels=['GALIL022','SKYNET4C','GLONASS-M','POLAR','ISS'],title=['Multiple Orbits'], show_plot=True)
+    #t.plot_n_orbits([op0.rs,op1.rs,op2.rs,op3.rs,op4.rs],labels=['GALIL022','SET4C','GLONASS-M','POLAR','ISS'],title=['Multiple Orbits'], show_plot=True)
 
 
      #ISS propogate

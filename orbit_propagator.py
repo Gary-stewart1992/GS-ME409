@@ -6,6 +6,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import Planetary_data_file as pd
 import tools as t
 
+hours=3600.0
+days=hours*24
+
 def null_perts():
     return {
         'aero':False,
@@ -15,41 +18,39 @@ def null_perts():
         'rho':False,
         'J2':False,
         'Aerodrag':False,
-        'thrust':False,
-        'thrust_direction':False,
+        'thrust':0,
+        'thrust_direction':0,
         'isp':0
     }
 
 class orbit_propagator:
     
-    def __init__(self,state0,tspan,dt,coes=False,deg=True,cb=pd.earth,perts=null_perts()):
+    def __init__(self,state0,tspan,dt,coes=False,deg=True,mass0=0,cb=pd.earth,perts=null_perts(),propagator='lsoda'):
         
         if coes:
-            self.r0,self.v0,_=t.coes2rv(state0,deg=deg,mu=cb['mu'])
+            self.r0,self.v0=t.coes2rv(state0,deg=deg,mu=cb['mu'])
         else:
             self.r0 = state0[:3]
             self.v0 = state0[3:]
-            
-                                                     #POTENTIAL ERROR  self.y0 = self.r0.tolist()+self.v0.tolist()..>> self.r0=r0 and self.v0=v0
-        self.y0=self.r0.tolist()+self.v0.tolist()  
-        self.tspan=tspan
-        self.dt=dt
         self.cb=cb
+        self.dt=dt
+        self.mass0=mass0                                                
+        self.tspan=tspan
+         
+    
 
-        self.n_steps = int(np.ceil(self.tspan/self.dt)) +1     # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
-
-
+        self.n_steps = int(np.ceil(self.tspan/self.dt))+ 1     # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
         self.ts=np.zeros((self.n_steps,1))                                                                                 # initialise arrays
-        self.ys=np.zeros((self.n_steps,6))                   # (6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
-        self.ts[0]=0
-        self.ys[0,:] = self.y0                    #initial condition at first step
-        self.step = 1 
+        self.y=np.zeros((self.n_steps,7))
+        self.propagator=propagator#                             (6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
+        self.step = 1
+        
 
+        self.y[0,:] = self.r0.tolist() + self.v0.tolist() + [self.mass0]                   #initial condition at first step
 
-
-        self.solver = ode(self.diffy_q)                   # initiate solver (lsoda)fast, high order
-        self.solver.set_integrator('lsoda')               # Adam-Bashford multistep
-        self.solver.set_initial_value(self.y0,0)          # initial state
+        self.solver = ode(self.diffy_q)                                                  # initiate solver (lsoda)fast, high order
+        self.solver.set_integrator(self.propagator)                                     # Adam-Bashford multistep
+        self.solver.set_initial_value(self.y[0,:],0)                                        # initial state
 
         self.perts=perts
         
@@ -57,19 +58,24 @@ class orbit_propagator:
 
     def propagate_orbit(self):
 
-            while self.solver.successful() and self.step<self.n_steps:                   # propogate orbit, solver does its work, timestep to small
-                self.solver.integrate(self.solver.t+self.dt)                             # while its successful the solver can have a number of errors
-                self.ts[self.step] = self.solver.t                                               # i.e time step can be to small or too rigid
-                self.ys[self.step] = self.solver.y                                        # step<n_step means that after time steps done we exit while loop
-                self.step += 1
+        print('Propagating orbit...')
+
+        while self.solver.successful() and self.step<self.n_steps:                   # propogate orbit, solver does its work, timestep to small
+            self.solver.integrate(self.solver.t+self.dt)                             # while its successful the solver can have a number of errors
+            self.ts[self.step] = self.solver.t                                               # i.e time step can be to small or too rigid
+            self.y[self.step] = self.solver.y                                        # step<n_step means that after time steps done we exit while loop
+            self.step += 1
 
 
-                self.rs = self.ys[:,:3]                                                      # extract the position array(60x6) we want all rows and all steps up to upto coloum 0,1,2
-                self.vs = self.ys[:,3:]
+        self.ts=self.ts[:self.step]
+        self.rs = self.y[:self.step,:3]                                                      # extract the position array(60x6) we want all rows and all steps up to upto coloum 0,1,2
+        self.vs = self.y[:self.step,3:6]
+        self.masses=self.y[:self.step,-1]
+        self.alts=(np.linalg.norm(self.rs,axis=1)-self.cb['radius']).reshape((self.step,1))
 
 
     def diffy_q(self,t,y,):                                                           # first imput into the differential equation solver
-        rx,ry,rz,vx,vy,vz = y                                                             # unpack state: the ode is a function solver and needs time, state and mu
+        rx,ry,rz,vx,vy,vz,mass= y                                                             # unpack state: the ode is a function solver and needs time, state and mu
         r = np.array([rx,ry,rz])
         v = np.array([vx,vy,vz])                                                    # distance/positional array to be a vector to be used in the law of gravitation
 
@@ -103,9 +109,13 @@ class orbit_propagator:
             
             a+=drag
 
-            
+        if self.perts['thrust']:
 
-        return [vx,vy,vz,a[0],a[1],a[2]]
+            a+self.perts['thrust_direction']*t.normed(v)*self.perts['thrust']/mass/1000.0
+
+            dmdt=-self.perts['thrust']/self.perts['isp']/9.81   
+
+        return [vx,vy,vz,a[0],a[1],a[2],dmdt]
 
 
     def calculate_coes(self,degrees=True):
