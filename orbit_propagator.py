@@ -23,12 +23,19 @@ def null_perts():
         'isp':0
     }
 
+
+def norm(v):
+    return np.linalg.norm(v)
+
+def normed(v):
+    return np.array(v)/norm(v)
+
 class orbit_propagator:
     
-    def __init__(self,state0,tspan,dt,coes=False,deg=True,mass0=0,cb=pd.earth,perts=null_perts(),propagator='lsoda'):
+    def __init__(self,state0,tspan,dt,coes=False,deg=True,mass0=0,perts=null_perts(),cb=pd.earth,propagator='lsoda'):
         
         if coes:
-            self.r0,self.v0=t.coes2rv(state0,deg=deg,mu=cb['mu'])
+            self.r0,self.v0,_=t.coes2rv(state0,deg=deg,mu=cb['mu'])
         else:
             self.r0 = state0[:3]
             self.v0 = state0[3:]
@@ -62,6 +69,7 @@ class orbit_propagator:
 
         while self.solver.successful() and self.step<self.n_steps:                   # propogate orbit, solver does its work, timestep to small
             self.solver.integrate(self.solver.t+self.dt)                             # while its successful the solver can have a number of errors
+
             self.ts[self.step] = self.solver.t                                               # i.e time step can be to small or too rigid
             self.y[self.step] = self.solver.y                                        # step<n_step means that after time steps done we exit while loop
             self.step += 1
@@ -69,12 +77,12 @@ class orbit_propagator:
 
         self.ts=self.ts[:self.step]
         self.rs = self.y[:self.step,:3]                                                      # extract the position array(60x6) we want all rows and all steps up to upto coloum 0,1,2
-        self.vs = self.y[:self.step,3:6]
-        self.masses=self.y[:self.step,-1]
+        self.vs = self.y[:self.step,3:]
+        #self.masses=self.y[:self.step,-1]
         self.alts=(np.linalg.norm(self.rs,axis=1)-self.cb['radius']).reshape((self.step,1))
 
 
-    def diffy_q(self,t,y,):                                                           # first imput into the differential equation solver
+    def diffy_q(self,t_,y,):                                                           # first imput into the differential equation solver
         rx,ry,rz,vx,vy,vz,mass= y                                                             # unpack state: the ode is a function solver and needs time, state and mu
         r = np.array([rx,ry,rz])
         v = np.array([vx,vy,vz])# distance/positional array to be a vector to be used in the law of gravitation
@@ -106,13 +114,14 @@ class orbit_propagator:
 #            a+=drag
 
         if self.perts['thrust']:
-            a+self.perts['thrust_direction']*t.normed(v)*self.perts['thrust']/mass/1000.0
-            dmdt=-self.perts['thrust']/self.perts['isp']/9.81   
-
-        return [vx,vy,vz,a[0],a[1],a[2]]
+            a+self.perts['thrust_direction']*normed(v)*self.perts['thrust']/mass/1000.0
+            dmdt=-self.perts['thrust']/self.perts['isp']/9.81
 
 
-    def calculate_coes(self,degrees=True):
+        return [vx,vy,vz,a[0],a[1],a[2], dmdt]
+
+
+    def calculate_coes(self,degrees=True,print_results=False):
         print('Calculating COEs....')
 
         self.coes=np.zeros((self.n_steps,6))
@@ -122,7 +131,7 @@ class orbit_propagator:
 
 
 
-    def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change in Classical Orbital Elements',figsize=(16,8)):
+    def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change in Orbital Elements',figsize=(16,8)):
         print('Plotting COEs...')
 
         fig,axs =plt.subplots(nrows=2,ncols=3,figsize=figsize)
@@ -209,10 +218,10 @@ class orbit_propagator:
             ts=self.ts
             xunit='Time Elapsed (seconds)'
 
-        plt.figyure(figsize=figsize)
+        plt.figure(figsize=figsize)
         plt.plot(ts,self.alts, 'k')
         plt.grid(True)
-        plt.xlabel('Time (%s)' % x_units)
+        plt.xlabel('Time (%s)' % xunit)
         plt.ylabel('altitude (km)')
         plt.title(title)
         if show_plot:

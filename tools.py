@@ -64,7 +64,7 @@ def plot_n_orbits(rs,labels,cb=pd.earth, show_plot=False,save_plot=False, title=
 def coes2rv(coes,deg=False,mu=pd.earth['mu']):
 
     if deg:
-        a,e,i,ta,aop,raan,date=coes
+        a,e,i,ta,aop,raan,date =coes
         i*=d2r
         ta*=d2r
         aop*=d2r
@@ -73,7 +73,6 @@ def coes2rv(coes,deg=False,mu=pd.earth['mu']):
     else:
         a,e,i,ta,aop,raan,date = coes
 
-    print('date',date)
 
     E=ecc_anomaly([ta,e], 'tae')
 
@@ -90,6 +89,10 @@ def coes2rv(coes,deg=False,mu=pd.earth['mu']):
     r = np.dot(perif2eci,r_perif)
     v = np.dot(perif2eci,v_perif)
 
+    print('r', r)
+
+    print('v',v)
+
     return r,v,date
 
 #RV2COES Algorithm at Rene-Schwarz m002
@@ -97,6 +100,7 @@ def rv2coes(r,v,mu=pd.earth['mu'],degrees=False,print_results=False):
 
     #norm of position vector
     r_norm=norm(r)
+
 
     #specific angular momentum vector
     h=np.cross(r,v)

@@ -9,8 +9,8 @@ from orbit_propagator import orbit_propagator as op
 from orbit_propagator import null_perts
 
 
-tspan = 48*3600                   
-dt = 10.0
+tspan = 15*24*3600                   
+dt = 250.0
 
 cb=pd.earth
 
@@ -21,19 +21,17 @@ if __name__ == '__main__':                          # special variable which def
     perts['aero']=False
     perts['Cd']=2.2
     perts['A']=(1e-3)**2/4.0 #km^2
-    perts['thrust']=0.327
+    perts['thrust']=0.5
     perts['thrust_direction']=-1
-    perts['isp']=4300
+    perts['isp']=5000.0
     perts['J2']=True
 
 
 
-    mass0 = 150.0 #kg
+    mass0 = 10.0 #kg
 
-    state0=[cb['radius']+1000.0,0.1,10.0,0.0,0.0,0.0]
- 
-    op=op(state0,tspan,dt,deg=True,coes=True,mass0=mass0,perts=perts)
-    
+    #SKYNET-4C com sat (1500kg,2.2kW) 
+    op=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,mass0=mass0,perts=perts)
     
     op.plot_alts(show_plot=True,hours=True)
     op.plot_3d(show_plot=True)             
@@ -57,20 +55,8 @@ if __name__ == '__main__':                          # special variable which def
 
 
 
-  #book example
-    #r0=np.array([-2384.46,5729.01,3050.45])
-    #v0=np.array([-7.36138,-2.98997,1.64352])
-    #state0=np.array(t.rv2coes(r0,v0,print_results=True))
-    #t.plot_n_orbits([op0.rs,op1.rs,op2.rs,op3.rs,op4.rs],labels=['GALIL022','SET4C','GLONASS-M','POLAR','ISS'],title=['Multiple Orbits'], show_plot=True)
 
-
-     #ISS propogate
-    #op4.plot_3d(show_plot=True)
-    #op4.calculate_coes()
-    #op4.plot_coes(show_plot=True,hours=True)
-
-
-  #Galileo-022
+    #Galileo-022
     #op0=op(t.tle2coes('galileo.txt'),tspan,dt,coes=True,deg=True,perts=perts)
 
     #SKYNET-4C com sat (1500kg,2.2kW) 
