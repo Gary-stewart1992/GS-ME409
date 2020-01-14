@@ -21,17 +21,22 @@ if __name__ == '__main__':                          # special variable which def
     perts['aero']=False
     perts['Cd']=2.2
     perts['A']=(1e-3)**2/4.0 #km^2
-    perts['thrust']=0.5
-    perts['thrust_direction']=1
-    perts['isp']=5000.0
+    perts['thrust']=0.4
+    perts['thrust_direction']=-1
+    perts['isp']=4300.0
     perts['J2']=True
 
+    
+    #defined stop conditions library
+    sc={'min_alt':250.0,
+        'max_alt':43000.0
 
+    }
 
-    mass0 = 1500.0 #kg
+    mass0 = 50.0 #kg
 
     #SKYNET-4C com sat (1500kg,2.2kW) 
-    op=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,mass0=mass0,perts=perts)
+    op=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,mass0=mass0,perts=perts,sc=sc)
 
 
     

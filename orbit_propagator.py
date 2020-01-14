@@ -32,7 +32,7 @@ def normed(v):
 
 class orbit_propagator:
     
-    def __init__(self,state0,tspan,dt,coes=False,deg=True,mass0=0,perts=null_perts(),cb=pd.earth,propagator='lsoda'):
+    def __init__(self,state0,tspan,dt,coes=False,deg=True,mass0=0,perts=null_perts(),cb=pd.earth,propagator='lsoda',sc={}):
         
         if coes:
             self.r0,self.v0,_=t.coes2rv(state0,deg=deg,mu=cb['mu'])
@@ -47,43 +47,107 @@ class orbit_propagator:
  
     
         self.n_steps = int(np.ceil(self.tspan/self.dt))+1                                                   # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
-        self.ts=np.zeros((self.n_steps,1))                                                                                 # initialise arrays
-        self.y=np.zeros((self.n_steps,7))
+        self.ts=np.zeros((self.n_steps+1,1))                                                                                 # initialise arrays
+        self.y=np.zeros((self.n_steps+1,7))
+        self.alts=np.zeros((self.n_steps+1))
         self.propagator=propagator                                                                      #6 states (vx,vy,vz,ax,ay,az) preallocating memory (instead of creating a new list it allows memory to overwrite existing list
-        self.step = 1
+        self.step = 0
         
 
         self.y[0,:] = self.r0.tolist() + self.v0.tolist()+[self.mass0]                    #initial condition at first step
+        self.alts[0]=t.norm(self.r0)-self.cb['radius']
 
         self.solver = ode(self.diffy_q)                                                  # initiate solver (lsoda)fast, high order
         self.solver.set_integrator(self.propagator)                                     # Adam-Bashford multistep
         self.solver.set_initial_value(self.y[0,:],0)                                        # initial state
 
         self.perts=perts
+
+        #store stop conditions and dictionary
+        self.stop_conditions_dict=sc
+
+        #define dictionary to map internals method
+        self.stop_conditions_map={'min_alt':self.check_min_alt}
         
+        #create stop conditions function list with deorbit always checked
+        self.stop_condition_function=[self.check_deorbit]
+
+        #fill in the rest of the stop conditions.
+        for key in self.stop_conditions_dict.key():
+            self.stop_condition_functions.append(self.stop_conditions_map[key])
+
+            
+        #propagate the orbit
         self.propagate_orbit()
 
-    def propagate_orbit(self):
 
+        #check if satellite has deorbited
+        def check_deorbit(self):
+            if self.alts[self.step]<self.cb['deorbit_altitude']:
+                print('Satellite deorbited after %.1f seconds' % self.ts[self.step])
+                return False
+            return True
+
+        #check if max altitude exceeded
+ #       def check_max_alt(self):
+ #           if self.alts[self.step]>self.stop_conditions_dict['max_alt']:
+ #               print('Satellite reached maximum altitude after %.1f seconds' % self.ts[self.step])
+ #               return False
+ #           return True
+
+        #check if minimum altitude exceeded
+        def check_min_alt(self):
+            if self.alts[self.step]<self.stop_conditions_dict['min_alt']:
+                print('Satellite reached minimum altitude after %.1f seconds' % self.ts[self.step])
+                return False
+            return True
+
+        #function called at each timestep to check all stop conditions
+        def check_stop_conditions(self):
+            
+            #for each stop condition
+            for sc in self.stop_condition_functions:
+
+                #if returns False
+                if not sc():
+
+                    #stop conditions reached and will return False
+                    return False
+
+            #if no stop conditions reached, return true.
+            return True
+
+        
+    #propagate orbit on the initial conditions defined within the init() function
+    def propagate_orbit(self):
         print('Propagating orbit...')
 
-        while self.solver.successful() and self.step<self.n_steps:                   # propogate orbit, solver does its work, timestep to small
-            self.solver.integrate(self.solver.t+self.dt)                             # while its successful the solver can have a number of errors
-
-            self.ts[self.step] = self.solver.t                                               # i.e time step can be to small or too rigid
-            self.y[self.step] = self.solver.y                                        # step<n_step means that after time steps done we exit while loop
+        
+        ##propagate orbit. check for max time and stop conditions at each time step 
+        while self.solver.successful() and self.step<self.n_steps and self.check_stop_conditions():
+            # propogate orbit integrator step
+            self.solver.integrate(self.solver.t+self.dt)                                                            # while its successful the solver can have a number of errors
             self.step += 1
 
+            
+            self.ts[self.step] = self.solver.t                                                                       # i.e time step can be to small or too rigid
+            self.y[self.step] = self.solver.y
+
+            self.alts[self.step]=t.norm(self.solver.y[:3])-self.cb['radius']
+          
 
         self.ts=self.ts[:self.step]
-        self.rs = self.y[:self.step,:3]                                                      # extract the position array(60x6) we want all rows and all steps up to upto coloum 0,1,2
+        self.rs = self.y[:self.step,:3]                                                                    # extract the position array(60x6) we want all rows and all steps up to upto coloum 0,1,2
         self.vs = self.y[:self.step,3:6]
-        self.masses=self.y[:self.step,-1]
-        self.alts=(np.linalg.norm(self.rs,axis=1)-self.cb['radius']).reshape((self.step,1))
+        self.masses=self.y[:self.step,6]
+        self.alts=self.alts[:self.step]
+
+        
+
 
 
     def diffy_q(self,t_,y,):                                                           # first imput into the differential equation solver
-        rx,ry,rz,vx,vy,vz,mass= y                                                             # unpack state: the ode is a function solver and needs time, state and mu
+        rx,ry,rz,vx,vy,vz,mass = y                                                             # unpack state: the ode is a function solver and needs time, state and mu
         r = np.array([rx,ry,rz])
         v = np.array([vx,vy,vz])# distance/positional array to be a vector to be used in the law of gravitation
         
