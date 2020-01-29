@@ -15,7 +15,7 @@ def norm(v):
 def normed(v):
     return np.array(v)/norm(v)
 
-def plot_n_orbits(rs,labelcb=pd.earth, show_plot=False,save_plot=False, title='Multiple Orbits',dpi=500):
+def plot_n_orbits(rs,label,cb=pd.earth, show_plot=False,save_plot=False, title='Multiple Orbits',dpi=500):
                     
     fig = plt.figure(figsize=(16,8))          # projection - '3d' essential import
     ax = fig.add_subplot(111,projection='3d')  # add subplot 111 - 1st row,1st column 1st value
@@ -61,10 +61,10 @@ def plot_n_orbits(rs,labelcb=pd.earth, show_plot=False,save_plot=False, title='M
         plt.savefig(title+'.png',dpi=500)
 
 #COES2RV algorithm at Rene-Schwarz m003
-def coes2rv(coes,deg=False,mu=pd.earth['mu']):
+def coes2rv(coes,deg=True,mu=pd.earth['mu']):
 
     if deg:
-        a,e,i,ta,aop,raan,date =coes
+        a,e,i,ta,aop,raan,date=coes
         i*=d2r
         ta*=d2r
         aop*=d2r
@@ -176,7 +176,7 @@ def ecc_anomaly(arr,method,tol=1e-8):
         print('Invalid method for eccentric anomaly')
             
 
-def tle2coes(tle_filename,mu=pd.earth['mu'],deg=False): #should be false
+def tle2coes(tle_filename,mu=pd.earth['mu'],deg=True,print_results=False):
     
     #read the tle text file from celetrak
     with open(tle_filename, 'r') as f:
@@ -257,6 +257,17 @@ def true_anomaly(arr):
 
 def tle2rv(tle_filename):
     return coes2rv(tle2coes(tle_filename))
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 #calculate atmospheric density from the given altitude

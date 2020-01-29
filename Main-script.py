@@ -9,74 +9,42 @@ from orbit_propagator import orbit_propagator as op
 from orbit_propagator import null_perts
 
 
-tspan = 24*3600                   
-dt = 250.0
+time_span = (24*3600)*38.8                 
+time_step = 50.0
 
 cb=pd.earth
 
 
 if __name__ == '__main__':                          # special variable which defines the code is being written in main script and not imported
-    
-    perts=null_perts()
-    perts['aero']=False
-    perts['Cd']=2.2
-    perts['A']=(1e-3)**2/4.0 #km^2
-    perts['thrust']=0.4
+    perts['thrust']=0.05
     perts['thrust_direction']=-1
-    perts['isp']=4300.0
+    perts['isp']=310
     perts['J2']=True
 
     
     #defined stop conditions library
-    sc={'min_alt':250.0,
+    sc={'min_alt':350,
         'max_alt':43000.0
-
     }
 
-    mass0 = 50.0 #kg
+    mass0 = 100.0 #kg
 
     #SKYNET-4C com sat (1500kg,2.2kW) 
-    op=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,mass0=mass0,perts=perts,sc=sc)
+    op=op(t.tle2coes('GLONASS-M.txt'),time_span,time_step,coes=True,deg=False,mass0=mass0,perts=perts,sc=sc)
 
-
-    
     op.plot_alts(show_plot=True,hours=True)
     op.plot_3d(show_plot=True)             
     op.calculate_coes()
     op.plot_coes(show_plot=True,hours=True)
      
 
+##Satellite TLE's
+#galileo.txt
+#SKYNET-4C.txt
+#GLONASS-M 
+#POLAR.txt
+#ISS
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #Galileo-022
-    #op0=op(t.tle2coes('galileo.txt'),tspan,dt,coes=True,deg=True,perts=perts)
-
-    #SKYNET-4C com sat (1500kg,2.2kW) 
-    #op1=op(t.tle2coes('SKYNET4Ctle.txt'),tspan,dt,coes=True,deg=True,perts=perts)
-
-    #GLONASS 
-    #op2=op(t.tle2coes('GLONASS-M.txt'),tspan,dt,coes=True,deg=True,perts=perts)
-
-    #POLAR
-    #op3=op(t.tle2coes('POLAR.txt'),tspan,dt,coes=True,deg=True,perts=perts)
-
-    #ISS
-    #op=op(t.tle2coes('ISS.txt'),tspan,dt,coes=True,deg=True,mass0=mass0,perts=perts)
 
 
 

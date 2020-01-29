@@ -11,13 +11,7 @@ days=hours*24
 
 def null_perts():
     return {
-        'aero':False,
-        'Cd':0,
-        'A':0,
-        'mu':0,
-        'rho':False,
         'J2':False,
-        'Aerodrag':False,
         'thrust':0,
         'thrust_direction':0,
         'isp':0
@@ -32,21 +26,21 @@ def normed(v):
 
 class orbit_propagator:
     
-    def __init__(self,state0,tspan,dt,coes=False,deg=True,mass0=0,perts=null_perts(),cb=pd.earth,propagator='lsoda',sc={}):
+    def __init__(self,initial_state,time_span,time_step,coes=False,deg=True,mass0=0,perts=null_perts(),cb=pd.earth,propagator='lsoda',sc={}):
         
         if coes:
-            self.r0,self.v0,_=t.coes2rv(state0,deg=deg,mu=cb['mu'])
+            self.r0,self.v0,_=t.coes2rv(initial_state,deg=deg,mu=cb['mu'])
         else:
-            self.r0 = state0[:3]
-            self.v0 = state0[3:]
+            self.r0 = initial_state[:3]
+            self.v0 = initial_state[3:]
         self.cb=cb
-        self.dt=dt
+        self.time_step=time_step
         self.mass0=mass0                                                
-        self.tspan=tspan
+        self.time_span=time_span
 
  
     
-        self.n_steps = int(np.ceil(self.tspan/self.dt))+1                                                   # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
+        self.n_steps = int(np.ceil(self.time_span/self.time_step))+1                                                   # ceil. function rounds float up to nearest whole number and int. transforms the float to a interger
         self.ts=np.zeros((self.n_steps+1,1))                                                                                 # initialise arrays
         self.y=np.zeros((self.n_steps+1,7))
         self.alts=np.zeros((self.n_steps+1))
@@ -70,52 +64,53 @@ class orbit_propagator:
         self.stop_conditions_map={'min_alt':self.check_min_alt}
         
         #create stop conditions function list with deorbit always checked
-        self.stop_condition_function=[self.check_deorbit]
+        self.stop_condition_functions=[self.check_deorbit]
 
         #fill in the rest of the stop conditions.
-        for key in self.stop_conditions_dict.key():
-            self.stop_condition_functions.append(self.stop_conditions_map[key])
+        for key in self.stop_conditions_dict.keys():
+            if key in self.stop_conditions_map:
+                self.stop_condition_functions.append(self.stop_conditions_map[key])
 
             
         #propagate the orbit
         self.propagate_orbit()
 
 
-        #check if satellite has deorbited
-        def check_deorbit(self):
-            if self.alts[self.step]<self.cb['deorbit_altitude']:
-                print('Satellite deorbited after %.1f seconds' % self.ts[self.step])
-                return False
-            return True
+    #check if satellite has deorbited
+    def check_deorbit(self):
+        if self.alts[self.step]<self.cb['deorbit_altitude']:
+            print('Satellite deorbited after %.1f seconds' % self.ts[self.step])
+            return False
+        return True
 
-        #check if max altitude exceeded
- #       def check_max_alt(self):
- #           if self.alts[self.step]>self.stop_conditions_dict['max_alt']:
- #               print('Satellite reached maximum altitude after %.1f seconds' % self.ts[self.step])
- #               return False
- #           return True
 
-        #check if minimum altitude exceeded
-        def check_min_alt(self):
-            if self.alts[self.step]<self.stop_conditions_dict['min_alt']:
-                print('Satellite reached minimum altitude after %.1f seconds' % self.ts[self.step])
-                return False
-            return True
-
-        #function called at each timestep to check all stop conditions
-        def check_stop_conditions(self):
+    #check if minimum altitude exceeded
+    def check_min_alt(self):
+        if self.alts[self.step]<self.stop_conditions_dict['min_alt']:
+            self.ts_in_hours=self.ts[self.step]/3600.0
+            self.ts_in_days=self.ts[self.step]/86400.0
             
-            #for each stop condition
-            for sc in self.stop_condition_functions:
+            print('Satellite reached minimum altitude after %.1f seconds' % self.ts[self.step])
+            print('Which amounts to %.1f hours' % self.ts_in_hours)
+            print('Which is approximately %.1f days' % self.ts_in_days)
+            
+            return False
+        return True
 
-                #if returns False
-                if not sc():
+    #function called at each timestep to check all stop conditions
+    def check_stop_conditions(self):
+            
+        #for each stop condition
+        for sc in self.stop_condition_functions:
 
-                    #stop conditions reached and will return False
-                    return False
+            #if returns False
+            if not sc():
 
-            #if no stop conditions reached, return true.
-            return True
+                #stop conditions reached and will return False
+                return False
+
+        #if no stop conditions reached, return true.
+        return True
 
         
     #propagate orbit on the initial conditions defined within the init() function
@@ -126,7 +121,7 @@ class orbit_propagator:
         ##propagate orbit. check for max time and stop conditions at each time step 
         while self.solver.successful() and self.step<self.n_steps and self.check_stop_conditions():
             # propogate orbit integrator step
-            self.solver.integrate(self.solver.t+self.dt)                                                            # while its successful the solver can have a number of errors
+            self.solver.integrate(self.solver.t+self.time_step)                                                            # while its successful the solver can have a number of errors
             self.step += 1
 
             
@@ -142,14 +137,11 @@ class orbit_propagator:
         self.masses=self.y[:self.step,6]
         self.alts=self.alts[:self.step]
 
-        
-
-
-
     def diffy_q(self,t_,y,):                                                           # first imput into the differential equation solver
         rx,ry,rz,vx,vy,vz,mass = y                                                             # unpack state: the ode is a function solver and needs time, state and mu
         r = np.array([rx,ry,rz])
         v = np.array([vx,vy,vz])# distance/positional array to be a vector to be used in the law of gravitation
+        norm_r=t.norm(r)
         
 
                                                                               # norm of the radius vector because because perbubations require the norm of the input - this lowers computational cost
@@ -165,24 +157,15 @@ class orbit_propagator:
             ty=r[1]/norm_r*(5*z2/r2-1)
             tz=r[2]/norm_r*(5*z2/r2-3)
             a+=1.5*self.cb['J2']*self.cb['mu']*self.cb['radius']**2.0/norm_r**4.0*np.array([tx,ty,tz])
-
-
-#        #aero drag calculations
-#        if self.perts['aero']:
-#            z=norm_r-self.cb['radius']
-#            rho=t.calc_atmospheric_density(z)
-#
-#
-#            v_rel=v-np.cross(self.cb['atm_rot_vector'],r)
-#            drag=-v_rel*0.5*rhp*t.norm(v_rel)*self.perts['Cd']*self.perts['A']/self.mass
-#            a+=drag
+            
 
         if self.perts['thrust']:
-            a+self.perts['thrust_direction']*normed(v)*self.perts['thrust']/mass/1000.0
-            dmdt=-self.perts['thrust']/self.perts['isp']/9.81
+            a+=(self.perts['thrust_direction']*t.normed(v)*self.perts['thrust']/mass)/1000.0
+            dmtime_step=-self.perts['thrust']/(self.perts['isp']*9.81)
 
 
-        return [vx,vy,vz,a[0],a[1],a[2], dmdt]
+
+        return [vx,vy,vz,a[0],a[1],a[2], dmtime_step]
 
 
     def calculate_coes(self,degrees=True,print_results=False):
@@ -192,7 +175,6 @@ class orbit_propagator:
 
         for n in range(self.n_steps):
             self.coes[n,:]=t.rv2coes(self.rs[n,:],self.vs[n,:],mu=self.cb['mu'],degrees=degrees)
-
 
 
     def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change in Orbital Elements',figsize=(16,8)):
@@ -267,12 +249,11 @@ class orbit_propagator:
         if save_plot:
             plt.savefig(title+'.png',dpi=500)
 
-
     def plot_alts(self,show_plot=False,save_plot=False,hours=False,days=False,title='Radial Distance vs. Time',figsize=(16,8),dpi=500):
 
         if hours:
             ts=self.ts/3600.0
-            xunit='Time (hours)'
+            xunit='Time(hours)'
 
         elif self.days:
             ts=self.days/(3600.0/24.0)
@@ -285,18 +266,14 @@ class orbit_propagator:
         plt.figure(figsize=figsize)
         plt.plot(ts,self.alts, 'k')
         plt.grid(True)
-        plt.xlabel('Time (%s)' % xunit)
+        plt.xlabel('(%s)'% xunit)
         plt.ylabel('altitude (km)')
         plt.title(title)
         if show_plot:
             plt.show()
         if save_plot:
             plt.savefig(title+'.png',dpi=dpi)
-
-            
     
-
-
     def plot_3d(self,show_plot=False,save_plot=False, title='Deorbiting Manoeuvre Trajectory',dpi=500):
         
         fig0 = plt.figure(figsize=(16,8))          # projection - '3d' essential import
@@ -340,12 +317,6 @@ class orbit_propagator:
         if show_plot:
             plt.show()
         if save_plot:
-            plt.savefig(title+'.png',dpi=300)
-
-
-  
-
-
-
+            plt.savefig(title+'.png',dpi=500)
 
 
