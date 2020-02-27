@@ -12,9 +12,13 @@ days=hours*24
 def null_perts():
     return {
         'J2':False,
+        'aerodrag':False,
         'thrust':0,
         'thrust_direction':0,
-        'isp':0
+        'isp':0,
+        'Cd':0,
+        'rho':0,
+        'A':0
     }
 
 
@@ -51,7 +55,7 @@ class orbit_propagator:
         self.y[0,:] = self.r0.tolist() + self.v0.tolist()+[self.mass0]                    #initial condition at first step
         self.alts[0]=t.norm(self.r0)-self.cb['radius']
 
-        self.solver = ode(self.diffy_q)                                                  # initiate solver (lsoda)fast, high order
+        self.solver = ode(self.ODE)                                                  # initiate solver (lsoda)fast, high order
         self.solver.set_integrator(self.propagator)                                     # Adam-Bashford multistep
         self.solver.set_initial_value(self.y[0,:],0)                                        # initial state
 
@@ -80,6 +84,7 @@ class orbit_propagator:
     def check_deorbit(self):
         if self.alts[self.step]<self.cb['deorbit_altitude']:
             print('Satellite deorbited after %.1f seconds' % self.ts[self.step])
+
             return False
         return True
 
@@ -137,10 +142,10 @@ class orbit_propagator:
         self.masses=self.y[:self.step,6]
         self.alts=self.alts[:self.step]
 
-    def diffy_q(self,t_,y,):                                                           # first imput into the differential equation solver
-        rx,ry,rz,vx,vy,vz,mass = y                                                             # unpack state: the ode is a function solver and needs time, state and mu
+    def ODE(self,t_,y,):                                                           
+        rx,ry,rz,vx,vy,vz,mass = y                                                             
         r = np.array([rx,ry,rz])
-        v = np.array([vx,vy,vz])# distance/positional array to be a vector to be used in the law of gravitation
+        v = np.array([vx,vy,vz])                                                
         norm_r=t.norm(r)
         
 
@@ -149,23 +154,41 @@ class orbit_propagator:
                                                                               # linalg is a sub library of numpy for equations and methods
         a = -r * self.cb['mu'] / norm_r**3                                    # law of gravitation, as r is vector a has output as a vector
 
+
         ##orbit propagator J2 
         if self.perts['J2']:
+            
             z2=r[2]**2
             r2=norm_r**2
+            
             tx=r[0]/norm_r*(5*z2/r2-1)
             ty=r[1]/norm_r*(5*z2/r2-1)
             tz=r[2]/norm_r*(5*z2/r2-3)
-            a+=1.5*self.cb['J2']*self.cb['mu']*self.cb['radius']**2.0/norm_r**4.0*np.array([tx,ty,tz])
             
+            a+=1.5*self.cb['J2']*self.cb['mu']*self.cb['radius']**2.0/norm_r**4.0*np.array([tx,ty,tz])
 
+        #calculate aerodynamic drag
+        if self.perts['aerodrag']:
+
+            #calculate altitude and air density
+            z=norm_r-self.cb['radius']  # find altitude
+            rho=t.calc_atmospheric_density(z) #find air density at given altitude
+
+            #calculate motion of s/c with repsect to a rotating atmosphere
+            v_rel=v-np.cross(self.cb['atm_rot_vector'],r)
+
+            drag=-v_rel*0.5*rho*t.norm(v_rel)*self.perts['Cd']*self.perts['A']/mass
+
+            a+=drag
+            
+        #calculate thrust
         if self.perts['thrust']:
             a+=(self.perts['thrust_direction']*t.normed(v)*self.perts['thrust']/mass)/1000.0
-            dmtime_step=-self.perts['thrust']/(self.perts['isp']*9.81)
+            mass_flow=-self.perts['thrust']/(self.perts['isp']*9.81)
 
 
 
-        return [vx,vy,vz,a[0],a[1],a[2], dmtime_step]
+        return [vx,vy,vz,a[0],a[1],a[2], mass_flow]
 
 
     def calculate_coes(self,degrees=True,print_results=False):
@@ -273,6 +296,7 @@ class orbit_propagator:
             plt.show()
         if save_plot:
             plt.savefig(title+'.png',dpi=dpi)
+
     
     def plot_3d(self,show_plot=False,save_plot=False, title='Deorbiting Manoeuvre Trajectory',dpi=500):
         

@@ -257,42 +257,35 @@ def true_anomaly(arr):
 
 def tle2rv(tle_filename):
     return coes2rv(tle2coes(tle_filename))
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
 
-#calculate atmospheric density from the given altitude
-#def calc_atmospheric_density(z):
-#    rhos,zs=find_rho_z(z)
-#    if rhos[0]==0: return 0.0
-#
-#    Hi=-(zs[1]-zs[0])/math.log(rhos[1]/rhos[0])
-#
-#    return rhos[0.0]*math.exp(-(z-zs[0.0]/Hi)
-#
-#
-#find endpoints of altitude and densitysurrounding input altitude
-#def find_rho_z(z,zs=pd.earth['zs'],rhos=pd.earth['rhos']):
-#    if not 1.0<z<1000.0:
-#        return[[0.0,0.0],[0.0,0.0]]
-#
-#    #find the two points surrounding the gicen input altitude
-#    for n in range(len(rhos)-1):
-#        if zs[n]<z<zs[n+1]:
-#            return [[rhos[n],rhos[n+1]],[zs[n+1]]]
-#
-#    #if out of range return zeros
-#    return [[0.0,0.0],[0.0,0.0]]
+#calculate atmospheric density from given altitude
+def calc_atmospheric_density(z):
+    rhos,zs=find_rho_z(z)
+    if rhos[0]==0: return 0.0
 
+    Hi=-(zs[1]-zs[0])/np.log(rhos[1]/rhos[0])
+
+    return rhos[0]*np.exp(-(z-zs[0])/Hi)
+
+
+
+
+#find endpoints of altitude and density surrounding input altitude
+def find_rho_z(z,zs=pd.earth['zs'],rhos=pd.earth['rhos']):
+    if not 1.0<z<1000.0:
+        return [[0.0,0.0],[0.0,0.0]]
+
+    #find the two poiunts surrounding the given input
+    for n in range(len(rhos)-1):
+        if zs[n]<z<zs[n+1]:
+            return[[rhos[n],rhos[n+1]],[zs[n],zs[n+1]]]
+
+    #if out of range return zeros
+    return [[0.0,0.0],[0.0,0.0]]
+                
+    
+    
 
 
     

@@ -30,7 +30,7 @@ if __name__ == '__main__':                          # special variable which def
     mass0 = 100.0 #kg
 
     #SKYNET-4C com sat (1500kg,2.2kW) 
-    op=op(t.tle2coes('GLONASS-M.txt'),time_span,time_step,coes=True,deg=False,mass0=mass0,perts=perts,sc=sc)
+    op=op(t.tle2coes('03BFM5.txt'),time_span,time_step,coes=True,deg=False,mass0=mass0,perts=perts,sc=sc)
 
     op.plot_alts(show_plot=True,hours=True)
     op.plot_3d(show_plot=True)             
@@ -39,6 +39,7 @@ if __name__ == '__main__':                          # special variable which def
      
 
 ##Satellite TLE's
+#03BFM5.txt
 #galileo.txt
 #SKYNET-4C.txt
 #GLONASS-M 
