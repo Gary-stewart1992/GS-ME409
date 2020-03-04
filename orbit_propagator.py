@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
+import xlwt 
 
 import Planetary_data_file as pd
 import tools as t
@@ -145,7 +146,7 @@ class orbit_propagator:
     def ODE(self,t_,y,):                                                           
         rx,ry,rz,vx,vy,vz,mass = y                                                             
         r = np.array([rx,ry,rz])
-        v = np.array([vx,vy,vz])                                                
+        v = np.array([vx,vy,vz])
         norm_r=t.norm(r)
         
 
@@ -186,6 +187,19 @@ class orbit_propagator:
             a+=(self.perts['thrust_direction']*t.normed(v)*self.perts['thrust']/mass)/1000.0
             mass_flow=-self.perts['thrust']/(self.perts['isp']*9.81)
 
+
+            
+
+        r_vali = r-self.cb['radius']
+
+        #print(r_vali,r,norm(v),v,self.cb['mu'],mass_flow)  #print position vector and normalised velocity to validate
+
+        #write data sheet to excel
+        #wb = xlwt.Workbook() #create workbook
+        #ws = wb.add_sheet('Velocity values for validation')#title
+        #ws.write(norm_r,norm(v)) #values to write
+        #wb.save("writing.xls...") #save workbook
+        
 
 
         return [vx,vy,vz,a[0],a[1],a[2], mass_flow]

@@ -12,6 +12,7 @@ r2d = 180.0/np.pi
 def norm(v):
     return np.linalg.norm(v)
 
+
 def normed(v):
     return np.array(v)/norm(v)
 
