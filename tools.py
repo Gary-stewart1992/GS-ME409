@@ -1,50 +1,69 @@
+#Gary Stewart
+#Tool functions
+
+#add in packages
 import math as m
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+#user defined
 import Planetary_data_file as pd
 
+#radians/degree conversion
 d2r = np.pi/180.0
 r2d = 180.0/np.pi
 
+#normalised velocity and unit velocity vector 
 def norm(v):
     return np.linalg.norm(v)
-
 
 def normed(v):
     return np.array(v)/norm(v)
 
-def plot_n_orbits(rs,label,cb=pd.earth, show_plot=False,save_plot=False, title='Multiple Orbits',dpi=500):
-                    
-    fig = plt.figure(figsize=(16,8))          # projection - '3d' essential import
-    ax = fig.add_subplot(111,projection='3d')  # add subplot 111 - 1st row,1st column 1st value
 
+#same as plot_3d in orbit_propagator but was used to plot multiple orbits on one plot.
+def plot_n_orbits(rs,label,cb=pd.earth, show_plot=False,save_plot=False, title='Multiple Orbits',dpi=500):
+    
+    #projection - '3d' essential import                
+    fig = plt.figure(figsize=(16,8))
+
+    #add subplot 111 - 1st row,1st column 1st value
+    ax = fig.add_subplot(111,projection='3d')  
+
+    #counter
     n=0
-    for r in rs:     
-        ax.plot(r[:,0],r[:,1],r[:,2],label='Trajectory')               # satallite trajectory plot
-        ax.plot([r[0,0]],[r[0,1]],[r[0,2]], 'ko')                    # satellites initial position plot
+    for r in rs:
+        
+        # satallite trajectory plot
+        ax.plot(r[:,0],r[:,1],r[:,2],label='Trajectory')
+        
+        # satellites initial position plot
+        ax.plot([r[0,0]],[r[0,1]],[r[0,2]], 'ko')                    
         n+=1
 
-                                                             # plot earth
-    _u,_v = np.mgrid [0:2*np.pi:20j,0:np.pi:20j] # define sphere  (VIDEO L2 EXPLANATION)
+    #lot earth
+    _u,_v = np.mgrid [0:2*np.pi:20j,0:np.pi:20j]       # define sphere
     _x = cb['radius'] * np.cos(_u) * np.sin(_v)        # trig
     _y = cb['radius'] * np.sin(_u) * np.sin(_v)        # trig
     _z = cb['radius'] * np.cos(_v)                     # trig
-    ax.plot_surface(_x,_y,_z, cmap='Blues')      # surface plot (x,y,z variables cmap=colour plot)
+    ax.plot_surface(_x,_y,_z, cmap='Blues')            # surface plot (x,y,z variables cmap=colour plot)
 
 
-                                                     # plot the x, y, z vectors
+    #plot the x, y, z vectors
     l=cb['radius']*2.0
-    x,y,z = [[0,0,0],[0,0,0],[0,0,0]]    # origin of arrow plot
-    u,v,w = [[500,0,0],[0,500,0],[0,0,500], 'ko'] # finish of arrow plot
+    x,y,z = [[0,0,0],[0,0,0],[0,0,0]]               # origin of arrow plot
+    u,v,w = [[500,0,0],[0,500,0],[0,0,500], 'ko']   # finish of arrow plot
 
-    ax.quiver(x,y,z,u,v,w,color='k')                            # quiver is the arrow function with the above arguements and k=colour
-    max_val=np.max(np.abs(rs))          # this helps normalise the axis and displays equal magnitudes i.e cubic looking
+    #quiver is the arrow function with the above arguements and k=colour
+    ax.quiver(x,y,z,u,v,w,color='k')
+
+    #this helps normalise the axis and displays equal magnitudes i.e cubic looking
+    max_val=np.max(np.abs(rs))          
 
 
-                                                  # set labels and titles
+    #set labels and titles
     ax.set_xlim([-max_val,max_val])
     ax.set_ylim([-max_val,max_val])
     ax.set_zlim([-max_val,max_val])
@@ -61,22 +80,24 @@ def plot_n_orbits(rs,label,cb=pd.earth, show_plot=False,save_plot=False, title='
     if save_plot:
         plt.savefig(title+'.png',dpi=500)
 
+
 #COES2RV algorithm at Rene-Schwarz m003
 def coes2rv(coes,deg=True,mu=pd.earth['mu']):
 
+    #if imput is in degrees
     if deg:
         a,e,i,ta,aop,raan,date=coes
         i*=d2r
         ta*=d2r
         aop*=d2r
         raan*=d2r
-        
+
+    #if input is radians    
     else:
         a,e,i,ta,aop,raan,date = coes
 
 
     E=ecc_anomaly([ta,e], 'tae')
-
     r_norm=a*(1-e**2)/(1+e*np.cos(ta))
 
     #calculate r and v vectors in perifocal frame
@@ -176,7 +197,7 @@ def ecc_anomaly(arr,method,tol=1e-8):
     else:
         print('Invalid method for eccentric anomaly')
             
-
+#used to convert two line elements to orbital elements
 def tle2coes(tle_filename,mu=pd.earth['mu'],deg=True,print_results=False):
     
     #read the tle text file from celetrak
@@ -268,9 +289,6 @@ def calc_atmospheric_density(z):
     Hi=-(zs[1]-zs[0])/np.log(rhos[1]/rhos[0])
 
     return rhos[0]*np.exp(-(z-zs[0])/Hi)
-
-
-
 
 #find endpoints of altitude and density surrounding input altitude
 def find_rho_z(z,zs=pd.earth['zs'],rhos=pd.earth['rhos']):
