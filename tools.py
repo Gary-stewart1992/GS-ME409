@@ -285,9 +285,6 @@ def find_rho_z(z,zs=pd.earth['zs'],rhos=pd.earth['rhos']):
     #if out of range return zeros
     return [[0.0,0.0],[0.0,0.0]]
                 
-    
-    
-
 
     
     

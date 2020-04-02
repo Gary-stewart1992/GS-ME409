@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
-import xlwt 
-
+from matplotlib.lines import Line2D
+import xlwt
 import Planetary_data_file as pd
 import tools as t
 
@@ -56,11 +56,13 @@ class orbit_propagator:
         self.y[0,:] = self.r0.tolist() + self.v0.tolist()+[self.mass0]                    #initial condition at first step
         self.alts[0]=t.norm(self.r0)-self.cb['radius']
 
+
         self.solver = ode(self.ODE)                                                  # initiate solver (lsoda)fast, high order
         self.solver.set_integrator(self.propagator)                                     # Adam-Bashford multistep
         self.solver.set_initial_value(self.y[0,:],0)                                        # initial state
 
         self.perts=perts
+    
 
         #store stop conditions and dictionary
         self.stop_conditions_dict=sc
@@ -147,8 +149,7 @@ class orbit_propagator:
         rx,ry,rz,vx,vy,vz,mass = y                                                             
         r = np.array([rx,ry,rz])
         v = np.array([vx,vy,vz])
-        norm_r=t.norm(r)
-        
+        #print(norm(v))
 
                                                                               # norm of the radius vector because because perbubations require the norm of the input - this lowers computational cost
         norm_r = np.linalg.norm(r)
@@ -156,7 +157,7 @@ class orbit_propagator:
         a = -r * self.cb['mu'] / norm_r**3                                    # law of gravitation, as r is vector a has output as a vector
 
 
-        ##orbit propagator J2 
+        ##orbit propagator J2 ######################################################################################################
         if self.perts['J2']:
             
             z2=r[2]**2
@@ -181,29 +182,13 @@ class orbit_propagator:
             drag=-v_rel*0.5*rho*t.norm(v_rel)*self.perts['Cd']*self.perts['A']/mass
 
             a+=drag
-            
-        #calculate thrust
+
+        #calculate thrus
         if self.perts['thrust']:
             a+=(self.perts['thrust_direction']*t.normed(v)*self.perts['thrust']/mass)/1000.0
             mass_flow=-self.perts['thrust']/(self.perts['isp']*9.81)
 
-
-            
-
-        r_vali = r-self.cb['radius']
-
-        #print(r_vali,r,norm(v),v,self.cb['mu'],mass_flow)  #print position vector and normalised velocity to validate
-
-        #write data sheet to excel
-        #wb = xlwt.Workbook() #create workbook
-        #ws = wb.add_sheet('Velocity values for validation')#title
-        #ws.write(norm_r,norm(v)) #values to write
-        #wb.save("writing.xls...") #save workbook
-        
-
-
         return [vx,vy,vz,a[0],a[1],a[2], mass_flow]
-
 
     def calculate_coes(self,degrees=True,print_results=False):
         print('Calculating COEs....')
@@ -214,7 +199,7 @@ class orbit_propagator:
             self.coes[n,:]=t.rv2coes(self.rs[n,:],self.vs[n,:],mu=self.cb['mu'],degrees=degrees)
 
 
-    def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change in Orbital Elements',figsize=(16,8)):
+    def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change In COES at 35786km with BPT4000',figsize=(16,8)):
         print('Plotting COEs...')
 
         fig1,axs1 =plt.subplots(nrows=2,ncols=3,figsize=figsize)
@@ -286,30 +271,46 @@ class orbit_propagator:
         if save_plot:
             plt.savefig(title+'.png',dpi=500)
 
-    def plot_alts(self,show_plot=False,save_plot=False,hours=False,days=False,title='Radial Distance vs. Time',figsize=(16,8),dpi=500):
+    def plot_alts(self,show_plot=False,save_plot=False,hours=False,days=False,title='Satellite Mass v.s Manoeuvre Time - Geostationary Orbit, XIPS-25 (35786km)',figsize=(16,8),dpi=500):
+
 
         if hours:
             ts=self.ts/3600.0
-            xunit='Time(hours)'
-
+            xunit='Time Elapsed (hours'
+            
         elif self.days:
             ts=self.days/(3600.0/24.0)
-            xunit='Time Elapsed (days)'
+            xunit='Time Elapsed (days'
 
         else:
             ts=self.ts
             xunit='Time Elapsed (seconds)'
 
         plt.figure(figsize=figsize)
-        plt.plot(ts,self.alts, 'k')
+
+        SIZE = 20
+        SIZE1 = 12
+
+        
+        plt.plot(ts,self.alts, Label="XIPS-25")
+
+        plt.rc('font', size=SIZE1)          # controls default text sizes
+        plt.rc('axes', titlesize=SIZE1)     # fontsize of the axes title
+        plt.rc('axes', labelsize=SIZE1)    # fontsize of the x and y labels
+        plt.rc('xtick', labelsize=SIZE1)    # fontsize of the tick labels
+        plt.rc('ytick', labelsize=SIZE1)    # fontsize of the tick labels
+        plt.rc('legend', fontsize=SIZE1)    # legend fontsize
+        plt.rc('figure', titlesize=SIZE1)  # fontsize of the figure title          
         plt.grid(True)
-        plt.xlabel('(%s)'% xunit)
-        plt.ylabel('altitude (km)')
+        plt.xlabel('%s)'% xunit)
+        plt.ylabel('Altitude (km)')
         plt.title(title)
+
         if show_plot:
             plt.show()
         if save_plot:
             plt.savefig(title+'.png',dpi=dpi)
+
 
     
     def plot_3d(self,show_plot=False,save_plot=False, title='Deorbiting Manoeuvre Trajectory',dpi=500):
@@ -356,5 +357,8 @@ class orbit_propagator:
             plt.show()
         if save_plot:
             plt.savefig(title+'.png',dpi=500)
+
+
+    
 
 
