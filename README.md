@@ -1,11 +1,13 @@
 # GS-ME409
-Individual Project code
+ME409, ME420, ME21 Individual Project Code
 
-#Hello, this is my code for my BEng dissertation on studying the feasibility of applying electric propulsion for end of life satellites. 
+Hello, 
 
-#this model can apply constant thrust to transfer a satellite between orbits. 
+My 4th year research project at the University of Strathclyde was an "Investigation into using Electric Propulsion (EP) in the Design of an Autonomous Failsafe Device to Perform End-of-Life Manoeuvres for Satellites in MEO and GEO."
 
-#if you would like to use the script please define your initial conditions in the main script, mass, area, ISP, thrust ect.  
-propogate the orbit within the main script, the script is fully working and there shouldnt be any need to edit the tools or orbit propagato function. 
+As part of methodology for the project was to construct a programme that could simulate constant thrust spiral manoeuvres using pertubation theory in order to assess the various thrusters.
 
-#two line elements which have satellite data built in have been provided in the TLE folder.
+The programme is ran from 'Main Script.py' which requires information regarding the satellites state and thrust/pertubations. 
+  The orbit propagator class was built to be used with state vectors, orbital elements and two-elements as input 
+  all required pertubation input is included in null_perts dictionary
+  
