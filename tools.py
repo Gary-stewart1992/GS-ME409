@@ -22,65 +22,6 @@ def norm(v):
 def normed(v):
     return np.array(v)/norm(v)
 
-
-#same as plot_3d in orbit_propagator but was used to plot multiple orbits on one plot.
-def plot_n_orbits(rs,label,cb=pd.earth, show_plot=False,save_plot=False, title='Multiple Orbits',dpi=500):
-    
-    #projection - '3d' essential import                
-    fig = plt.figure(figsize=(16,8))
-
-    #add subplot 111 - 1st row,1st column 1st value
-    ax = fig.add_subplot(111,projection='3d')  
-
-    #counter
-    n=0
-    for r in rs:
-        
-        # satallite trajectory plot
-        ax.plot(r[:,0],r[:,1],r[:,2],label='Trajectory')
-        
-        # satellites initial position plot
-        ax.plot([r[0,0]],[r[0,1]],[r[0,2]], 'ko')                    
-        n+=1
-
-    #lot earth
-    _u,_v = np.mgrid [0:2*np.pi:20j,0:np.pi:20j]       # define sphere
-    _x = cb['radius'] * np.cos(_u) * np.sin(_v)        # trig
-    _y = cb['radius'] * np.sin(_u) * np.sin(_v)        # trig
-    _z = cb['radius'] * np.cos(_v)                     # trig
-    ax.plot_surface(_x,_y,_z, cmap='Blues')            # surface plot (x,y,z variables cmap=colour plot)
-
-
-    #plot the x, y, z vectors
-    l=cb['radius']*2.0
-    x,y,z = [[0,0,0],[0,0,0],[0,0,0]]               # origin of arrow plot
-    u,v,w = [[500,0,0],[0,500,0],[0,0,500], 'ko']   # finish of arrow plot
-
-    #quiver is the arrow function with the above arguements and k=colour
-    ax.quiver(x,y,z,u,v,w,color='k')
-
-    #this helps normalise the axis and displays equal magnitudes i.e cubic looking
-    max_val=np.max(np.abs(rs))          
-
-
-    #set labels and titles
-    ax.set_xlim([-max_val,max_val])
-    ax.set_ylim([-max_val,max_val])
-    ax.set_zlim([-max_val,max_val])
-
-    ax.set_xlabel('X (km)')
-    ax.set_ylabel('Y (km)')
-    ax.set_zlabel('Z (km)')
-
-    ax.set_title('Deorbiting Manoeuvre') # title
-    plt.legend()
-
-    if show_plot:
-        plt.show()
-    if save_plot:
-        plt.savefig(title+'.png',dpi=500)
-
-
 #COES2RV algorithm at Rene-Schwarz m003
 def coes2rv(coes,deg=True,mu=pd.earth['mu']):
 

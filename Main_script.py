@@ -13,7 +13,7 @@ from orbit_propagator import null_perts
 
 
 #span of time in which the simulation occurs
-tspan = 350*24*3600
+tspan = 300*24*3600
 #time step
 dt = 500.0
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     perts['A']= 5.2e-6 #km2
 
     #satellite dry mass 
-    mass0 = 200
+    mass0 = 2000
 
     #initialises the solver
     op=op(t.tle2coes('03BFM5.txt'),tspan,dt,coes=True,deg=False,mass0=mass0,perts=perts)
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     op.plot_alts(show_plot=True,hours=True)
     
     #plots 3D plot 
-    #op.plot_3d(show_plot=True)
+    op.plot_3d(show_plot=True)
 
     #calculates plots
     op.calculate_coes()

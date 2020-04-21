@@ -220,7 +220,7 @@ class orbit_propagator:
 
 
     #function plots the six orbital elements
-    def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='COES plot',figsize=(16,8)):
+    def plot_coes(self,hours=False,days=False,show_plot=False,save_plot=False,title='Change in elements',figsize=(16,8)):
         print('Plotting COEs...')
         fig1,axs1 =plt.subplots(nrows=2,ncols=3,figsize=figsize)
 
@@ -291,7 +291,7 @@ class orbit_propagator:
         if save_plot:
             plt.savefig(title+'.png',dpi=500)
 
-    def plot_alts(self,show_plot=False,save_plot=False,hours=False,days=False,title='SAT-1 Mass Performance Plot (BPT4000, GEO)', figsize=(16,8),dpi=500):
+    def plot_alts(self,show_plot=False,save_plot=False,hours=False,days=False,title='Altitude', figsize=(16,8),dpi=500):
 
         #define x axis units
         if hours:
@@ -309,118 +309,7 @@ class orbit_propagator:
         #states figure size in function definition
         plt.figure(figsize=figsize)
 
-        #plots empty graph
-        A1 = np.load('A1.npy')
-        A2 = np.load('A2.npy')
-        A3 = np.load('A3.npy')
-        A4 = np.load('A4.npy')
-        A5 = np.load('A5.npy')
-        A6 = np.load('A6.npy')
-        A7 = np.load('A7.npy')
-        A8 = np.load('A8.npy')
-        A9 = np.load('A9.npy')
-        A10 = np.load('A10.npy')
-        A11 = np.load('A11.npy')
-        A12 = np.load('A12.npy')
-        A13 = np.load('A13.npy')
-        A14 = np.load('A14.npy')
-        A15 = np.load('A15.npy')
-        A16 = np.load('A16.npy')
-        A17 = np.load('A17.npy')
-        A18 = np.load('A18.npy')
-        A19 = np.load('A19.npy')
-        A20 = np.load('A20.npy')
-        A21 = np.load('A21.npy')
-        A22 = np.load('A22.npy')
-        A23 = np.load('A23.npy')
-        A24 = np.load('A24.npy')
-        A25 = np.load('A25.npy')
-        A26 = np.load('A26.npy')
-        A27 = np.load('A27.npy')
-        A28 = np.load('A28.npy')
-        A29 = np.load('A29.npy')
-        A30 = np.load('A30.npy')
-
-        #plots empty graph
-        T1 = np.load('T1.npy')
-        T2 = np.load('T2.npy')
-        T3 = np.load('T3.npy')
-        T4 = np.load('T4.npy')
-        T5 = np.load('T5.npy')
-        T6 = np.load('T6.npy')
-        T7 = np.load('T7.npy')
-        T8 = np.load('T8.npy')
-        T9 = np.load('T9.npy')
-        T10 = np.load('T10.npy')
-        T11 = np.load('T11.npy')
-        T12 = np.load('T12.npy')
-        T13 = np.load('T13.npy')
-        T14 = np.load('T14.npy')
-        T15 = np.load('T15.npy')
-        T16 = np.load('T16.npy')
-        T17 = np.load('T17.npy')
-        T18 = np.load('T18.npy')
-        T19 = np.load('T19.npy')
-        T20 = np.load('T20.npy')
-        T21 = np.load('T21.npy')
-        T22 = np.load('T22.npy')
-        T23 = np.load('T23.npy')
-        T24 = np.load('T24.npy')
-        T25 = np.load('T25.npy')
-        T26 = np.load('T26.npy')
-        T27 = np.load('T27.npy')
-        T28 = np.load('T28.npy')
-        T29 = np.load('T29.npy')
-        T30 = np.load('T30.npy')
-        
-        N = 30
-        plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.jet(np.linspace(0,1,N)))
-       
-        #plt.plot(ts,self.alts, Label="XIPS-25")
-        plt.plot(T1, A1, Label="200kg")
-        plt.plot(T2, A2, Label="400kg")
-        plt.plot(T3, A3, Label="600kg")
-        plt.plot(T4, A4, Label="800kg")
-        plt.plot(T5, A5, Label="1000kg")
-        plt.plot(T6, A6, Label="1200kg")
-        plt.plot(T7, A7, Label="1400kg")
-        plt.plot(T8, A8, Label="1600kg")
-        plt.plot(T9, A9, Label="1800kg")
-        plt.plot(T10, A10, Label="2000kg")
-        plt.plot(T11, A11, Label="2200kg")
-        plt.plot(T12, A12, Label="2400kg")
-        plt.plot(T13, A13, Label="2600kg")
-        plt.plot(T14, A14, Label="2800kg")
-        plt.plot(T15, A15, Label="3000kg")
-        plt.plot(T16, A16, Label="3200kg")
-        plt.plot(T17, A17, Label="3400kg")
-        plt.plot(T18, A18, Label="3600kg")
-        plt.plot(T19, A19, Label="3800kg")
-        plt.plot(T20, A20, Label="4000kg")
-        plt.plot(T21, A21, Label="4200kg")
-        plt.plot(T22, A22, Label="4400kg")
-        plt.plot(T23, A23, Label="4600kg")
-        plt.plot(T24, A24, Label="4800kg")
-        plt.plot(T25, A25, Label="5000kg")
-        plt.plot(T26, A26, Label="5200kg")
-        plt.plot(T27, A27, Label="5400kg")
-        plt.plot(T28, A28, Label="5600kg")
-        plt.plot(T29, A29, Label="5800kg")
-        plt.plot(T30, A30, Label="6000kg")
-      
-
-        plt.legend(loc=1, ncol=2)
-        
-        SIZE = 20
-        SIZE1 = 24
-
-        plt.rc('font', size=SIZE)          # controls default text sizes
-        plt.rc('axes', titlesize=SIZE)     # fontsize of the axes title
-        plt.rc('axes', labelsize=SIZE)     # fontsize of the x and y labels
-        plt.rc('xtick', labelsize=SIZE)    # fontsize of the tick labels
-        plt.rc('ytick', labelsize=SIZE)    # fontsize of the tick labels
-        plt.rc('legend', fontsize=SIZE)    # legend fontsize
-        plt.rc('figure', titlesize=SIZE)   # fontsize of the figure title          
+        plt.plot(ts,self.alts, Label="XIPS-25") 
         plt.grid(True)                      # enables grid
         plt.xlabel('%s)'% xunit)            # links units of time 
         plt.ylabel('Altitude (km)')         # y axis
