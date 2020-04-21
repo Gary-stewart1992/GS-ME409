@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     #attributes values to the null dictionary defined in orbit propagator 
     perts=null_perts()
-    perts['thrust']=0.28
+    perts['thrust']=0.165
     perts['thrust_direction']=-1
     perts['isp']=3550
     perts['J2']=True
@@ -35,16 +35,16 @@ if __name__ == '__main__':
     perts['A']= 5.2e-6 #km2
 
     #satellite dry mass 
-    mass0 = 2000
+    mass0 = 200
 
     #initialises the solver
-    op=op(t.tle2coes('EUTELSAT3B.txt'),tspan,dt,coes=True,deg=False,mass0=mass0,perts=perts)
+    op=op(t.tle2coes('03BFM5.txt'),tspan,dt,coes=True,deg=False,mass0=mass0,perts=perts)
 
     #plots altitude vs time plot 
     op.plot_alts(show_plot=True,hours=True)
     
     #plots 3D plot 
-    op.plot_3d(show_plot=True)
+    #op.plot_3d(show_plot=True)
 
     #calculates plots
     op.calculate_coes()
